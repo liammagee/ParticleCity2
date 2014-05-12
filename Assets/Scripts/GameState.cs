@@ -43,6 +43,7 @@ public class GameState : MonoBehaviour
 	public bool showNetwork;
 	public bool showBuildings;
 	public bool showUpdatedTerrain;
+	public bool showGrid;
 
 	public void Start() {
 		if (numAgents == 0)
@@ -54,6 +55,7 @@ public class GameState : MonoBehaviour
 		showNetwork = false;
 		showBuildings = false;
 		showUpdatedTerrain = false;
+		showGrid = false;
 	}
 
 	public int getNumAgents() {

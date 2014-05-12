@@ -48,6 +48,11 @@ public class Agent : MonoBehaviour
 		currentDirection = new Vector3(dirX, dirY, dirZ);
 	}
 
+	private Mesh mesh;
+  private Vector3[] verts;
+  private Vector2[] uvs;
+  private int[] tris;
+
 	public void FixedUpdate() {
 		if (! running) 
 			return;
@@ -74,9 +79,66 @@ public class Agent : MonoBehaviour
 
 		// Calculate the patch
 
-		// Do mesh here instead
   	GameState gameState = GameObject.Find("Main Camera").GetComponent<GameState>();
 		if (gameState.showNetwork) {
+
+
+			// Do mesh here instead
+	  //   if ( !mesh )
+	  //   {
+			// 		GameObject network = new GameObject(gameObject.name + " network");
+			// 		network.transform.parent = gameObject.transform;
+			// 		MeshFilter filter = (MeshFilter)network.AddComponent("MeshFilter");
+			// 		MeshRenderer renderer = (MeshRenderer)network.AddComponent("MeshRenderer");
+			// 		// MeshFilter filter = gameObject.GetComponent<MeshFilter>();
+			// 		// MeshRenderer renderer = gameObject.GetComponent<MeshRenderer>();
+			// 		renderer.material.color = Color.green;
+	  //       mesh = new Mesh();
+	  //       // MeshFilter f = GameObject.Find("Network").GetComponent<MeshFilter>();
+	  //       filter.mesh = mesh;
+	  //       mesh.name = gameObject.name + "Mesh";
+	  //   }
+	  //   mesh.Clear(); 
+
+	  //   Vector3[] vertices = new Vector3[friends.Count * 4];
+	  //   Vector2[] uvs = new Vector2[friends.Count * 4];
+	  //   int[] triangles = new int[friends.Count * 6];
+
+			// for (int i = 0; i < friends.Count; i++) {
+			// 	GameObject friend = (GameObject)friends[i];
+			// 	if (friend != null && gameObject.transform.position != null && friend.transform.position != null) {
+			// 		GameObject dummy = (GameObject)dummies[i];
+
+			// 		Vector3 start = gameObject.transform.position;
+			// 		Vector3 end = friend.transform.position;
+
+			// 		Vector3[] quads = MakeQuad(start, end, 1.0f);
+			// 		vertices[i * 4] = quads[0];
+			// 		vertices[i * 4 + 1] = quads[1];
+			// 		vertices[i * 4 + 2] = quads[2];
+			// 		vertices[i * 4 + 3] = quads[3];
+
+			// 		uvs[i * 4] = new Vector2(0, 1);
+			// 		uvs[i * 4 + 1] = new Vector2(1, 1);
+			// 		uvs[i * 4 + 2] = new Vector2(0, 0);
+			// 		uvs[i * 4 + 3] = new Vector2(1, 0);
+
+			// 		triangles[i * 6] = i * 4;
+			// 		triangles[i * 6 + 1] = i * 4 + 1;
+			// 		triangles[i * 6 + 2] = i * 4 + 2;
+			// 		triangles[i * 6 + 3] = i * 4 + 1;
+			// 		triangles[i * 6 + 4] = i * 4 + 2;
+			// 		triangles[i * 6 + 5] = i * 4 + 3;
+			// 	}
+			// }
+			// mesh.vertices = vertices;
+			// mesh.uv = uvs;
+			// mesh.triangles = triangles;
+			// mesh.RecalculateNormals();
+			// mesh.RecalculateBounds();
+
+			// Material material = new Material();
+			// material.color = Color.green;
 			for (int i = 0; i < friends.Count; i++) {
 				GameObject friend = (GameObject)friends[i];
 				if (friend != null && gameObject.transform.position != null && friend.transform.position != null) {
@@ -84,8 +146,8 @@ public class Agent : MonoBehaviour
 					LineRenderer lineRenderer = (LineRenderer)dummy.GetComponent("LineRenderer");
 					if (lineRenderer == null)
 						lineRenderer = (LineRenderer)dummy.AddComponent("LineRenderer");
-					lineRenderer.material = new Material (Shader.Find("Particles/Additive"));
-					lineRenderer.SetColors(c1, c2);
+					lineRenderer.material.color = Color.green;
+					// lineRenderer.SetColors(c1, c2);
 					lineRenderer.SetWidth(0.5f,0.5f);
 
 					// Do positions
@@ -110,6 +172,23 @@ public class Agent : MonoBehaviour
 			grid.TurnOnCell(gameObject.transform.position);
 
 	}
+
+	Vector3[] MakeQuad(Vector3 s, Vector3 e, float w) {
+		w = w / 2;
+		Vector3[] q = new Vector3[4];
+
+		Vector3 n = Vector3.Cross(s, e);
+		Vector3 l = Vector3.Cross(n, e-s);
+		l.Normalize();
+		
+		q[0] = transform.InverseTransformPoint(s + l * w);
+		q[1] = transform.InverseTransformPoint(s + l * -w);
+		q[2] = transform.InverseTransformPoint(e + l * w);
+		q[3] = transform.InverseTransformPoint(e + l * -w);
+
+		return q;
+	}
+
 
   void OnControllerColliderHit(ControllerColliderHit hit) {
   	GameState gameState = GameObject.Find("Main Camera").GetComponent<GameState>();

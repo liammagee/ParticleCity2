@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
  
-public class CursorGrid : MonoBehaviour {
+public class GridForTerrain : MonoBehaviour {
        
         public Terrain terrain;
         private TerrainData terrainData;
@@ -9,7 +9,6 @@ public class CursorGrid : MonoBehaviour {
         private int heightmapWidth;
         private int heightmapHeight;
         private float[,] heightmapData;
-        private int cellSize;
        
         void GetTerrainData()
         {
@@ -26,8 +25,6 @@ public class CursorGrid : MonoBehaviour {
             heightmapHeight = terrain.terrainData.heightmapHeight;
          
             heightmapData = terrainData.GetHeights( 0, 0, heightmapWidth, heightmapHeight );
-
-            cellSize = 5;
         }
        
         private Vector3 rayHitPoint;
@@ -41,17 +38,17 @@ public class CursorGrid : MonoBehaviour {
        
         // Update is called once per frame
         void Update () {
-                // raycast to the terrain
-            RaycastToTerrain();
+            //     // raycast to the terrain
+            // RaycastToTerrain();
          
-            // find the heightmap position of that hit
-            GetHeightmapPosition();
+            // // find the heightmap position of that hit
+            // GetHeightmapPosition();
 
-            // Calculate Grid
-            CalculateGrid();
+            // // Calculate Grid
+            // CalculateGrid();
          
-            // Update Mesh
-            UpdateMesh();
+            // // Update Mesh
+            // UpdateMesh();
         }
        
         void RaycastToTerrain()
@@ -138,8 +135,8 @@ public class CursorGrid : MonoBehaviour {
             if ( !mesh )
             {
                 mesh = new Mesh();
-                MeshFilter f = GetComponent("MeshFilter") as MeshFilter;
-                f.mesh = mesh;
+                        MeshFilter f = GetComponent("MeshFilter") as MeshFilter;
+                        f.mesh = mesh;
                 mesh.name = gameObject.name + "Mesh";
             }
          
