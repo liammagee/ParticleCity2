@@ -37,6 +37,23 @@ public class Grid : MonoBehaviour
     buildings = new Dictionary<Vector2, GameObject> ();
 
 		BuildGrid ();  
+    ShowStats();
+  }
+
+  void ShowStats() {
+    Debug.Log("Cell size: " + CellSize);
+    Debug.Log("Terrain size x: " + terrainSize.x);
+    Debug.Log("Terrain size y: " + terrainSize.y);
+    Debug.Log("Terrain size z: " + terrainSize.z);
+    Debug.Log("Terrain position x: " + origin.x);
+    Debug.Log("Terrain position y: " + origin.y);
+    Debug.Log("Terrain position z: " + origin.z);
+    Debug.Log("Width: " + width);
+    Debug.Log("Height: " + height);
+    Debug.Log("Alphamap Width: " + terrain.terrainData.alphamapWidth);
+    Debug.Log("Alphamap Height: " + terrain.terrainData.alphamapHeight);
+    Debug.Log("Heightmap Width: " + terrain.terrainData.heightmapWidth);
+    Debug.Log("Heightmap Height: " + terrain.terrainData.heightmapHeight);
   }
 
 	void Update (){
@@ -185,9 +202,6 @@ public class Grid : MonoBehaviour
     }
 	}
 
-  void AddLine() {
-
-  }
  
 	public Vector3 GetWorldPosition (Vector2 gridPosition)
 	{
@@ -213,18 +227,10 @@ public class Grid : MonoBehaviour
 	public void TurnOnCell (Vector3 worldPosition)
 	{
 		int counter = 0;
-		Vector3 terrainPosition = new Vector3 (worldPosition.x + terrain.terrainData.size.x / 2, worldPosition.y, worldPosition.z + terrain.terrainData.size.z / 2);
-		// Vector2 pos = new Vector2((int)(terrainPosition.x / CellSize), (int)(terrainPosition.z / CellSize));
-  //   if (pos.x < 0 || pos.x > width || pos.y < 0 || pos.y > height)
-  //     return;
-		// int tw = (int)(terrain.terrainData.alphamapWidth / width);
-		// int th = (int)(terrain.terrainData.alphamapHeight / height);
-    // int w = (int)(tw * pos.x);
-    // int h = (int)(th * pos.y);
+		Vector3 terrainPosition = new Vector3(worldPosition.x + terrain.terrainData.size.x / 2, worldPosition.y, worldPosition.z + terrain.terrainData.size.z / 2);
 		int w = (int)(terrainPosition.x / terrain.terrainData.size.x * terrain.terrainData.alphamapWidth);
 		int h = (int)(terrainPosition.z / terrain.terrainData.size.z * terrain.terrainData.alphamapHeight);
 		Vector2 actualPos = new Vector2 (w, h);
-    // Debug.Log(w + ":" + h);
 
     if (! gridCells.ContainsKey (actualPos)) {
       gridCells.Add (actualPos, 0);
