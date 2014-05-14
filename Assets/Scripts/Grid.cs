@@ -260,9 +260,6 @@ public class Grid : MonoBehaviour
 		
 		// assign to mesh
 		cursorMesh.vertices = verts;
-		Debug.Log (rayHitPoint.x + ":" + rayHitPoint.z);
-		Debug.Log (heightmapPos.x + ":" + heightmapPos.z);
-		Debug.Log ("-----");
 
 		cursorMesh.RecalculateBounds();
 		cursorMesh.RecalculateNormals();
@@ -270,7 +267,7 @@ public class Grid : MonoBehaviour
 
 	void BuildGrid ()
 	{  
-		InitGrid ();
+//		InitGrid ();
 		ShowGrid ();    
 	}
 
@@ -356,7 +353,7 @@ public class Grid : MonoBehaviour
 				int maxCount = (count > 10 ? 10 : count);
 				float[,,] existingMap = terrainData.GetAlphamaps (w, h, (int)alphamapWidthPerCell, (int)alphamapHeightPerCell);
 				if (existingMap [0, 0, 0] != 1 - (maxCount / 10.0f)) {
-					float[,,] map = new float[(int)alphamapWidthPerCell, (int)alphamapHeightPerCell, 2];
+					float[,,] map = new float[(int)alphamapWidthPerCell, (int)alphamapHeightPerCell, terrainData.alphamapLayers];
 					for (int x = 0; x < (int)alphamapWidthPerCell; x++) {
 						for (int y = 0; y < (int)alphamapHeightPerCell; y++) {
 							map [x, y, 0] = 1 - (maxCount / 10.0f);

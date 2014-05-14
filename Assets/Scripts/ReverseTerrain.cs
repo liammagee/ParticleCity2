@@ -25,6 +25,9 @@ public class ReverseTerrain : MonoBehaviour
 	}
 
 	[MenuItem("Terrain/Splatmap")]
+	/// <summary>
+	///  Taken from https://alastaira.wordpress.com/2013/11/14/procedural-terrain-splatmapping/
+	/// </summary>
 	public static void Splatmap() {
         TerrainData terrainData = Terrain.activeTerrain.terrainData;
  
@@ -40,7 +43,7 @@ public class ReverseTerrain : MonoBehaviour
                 float x_01 = (float)x/(float)terrainData.alphamapWidth;
                  
                 // Sample the height at this location (note GetHeight expects int coordinates corresponding to locations in the heightmap array)
-                        float height = terrainData.GetHeight(Mathf.RoundToInt(y_01 * terrainData.heightmapHeight),Mathf.RoundToInt(x_01 * terrainData.heightmapWidth) );
+                float height = terrainData.GetHeight(Mathf.RoundToInt(y_01 * terrainData.heightmapHeight),Mathf.RoundToInt(x_01 * terrainData.heightmapWidth) );
                  
                 // Calculate the normal of the terrain (note this is in normalised coordinates relative to the overall terrain dimensions)
                 Vector3 normal = terrainData.GetInterpolatedNormal(y_01,x_01);
@@ -51,8 +54,9 @@ public class ReverseTerrain : MonoBehaviour
                 // Setup an array to record the mix of texture weights at this point
                 float[] splatWeights = new float[terrainData.alphamapLayers];
                  
+				// The following is referenced from https://alastaira.wordpress.com/2013/11/14/procedural-terrain-splatmapping/
+				/*
                 // CHANGE THE RULES BELOW TO SET THE WEIGHTS OF EACH TEXTURE ON WHATEVER RULES YOU WANT
-     
                 // Texture[0] has constant influence
                 splatWeights[0] = 0.5f;
                  
@@ -66,8 +70,34 @@ public class ReverseTerrain : MonoBehaviour
                  
                 // Texture[3] increases with height but only on surfaces facing positive Z axis 
                 splatWeights[3] = height * Mathf.Clamp01(normal.z);
-                 
-                // Sum of all textures weights must add to 1, so calculate normalization factor from sum of weights
+				*/
+				if (height < 1.0f) {
+					splatWeights[0] = 0f;
+					splatWeights[1] = 0f;
+					splatWeights[2] = 1.0f;
+					splatWeights[3] = 0f;
+				}
+				else if (height < 20.0f) {
+					splatWeights[0] = 1.0f;
+					splatWeights[1] = 0f;
+					splatWeights[2] = 0f;
+					splatWeights[3] = 0f;
+				}
+				else if (height < 50.0f) {
+					splatWeights[0] = 0f;
+					splatWeights[1] = 1.0f;
+					splatWeights[2] = 0f;
+					splatWeights[3] = 0f;
+				}
+				else {
+					splatWeights[0] = 0f;
+					splatWeights[1] = 0f;
+					splatWeights[2] = 0f;
+					splatWeights[3] = 1.0f;
+				}
+
+				
+				// Sum of all textures weights must add to 1, so calculate normalization factor from sum of weights
                 float z = splatWeights.Sum();
                  
                 // Loop through each terrain texture
@@ -84,6 +114,7 @@ public class ReverseTerrain : MonoBehaviour
       
         // Finally assign the new splatmap to the terrainData:
         terrainData.SetAlphamaps(0, 0, splatmapData);
-    }
+		Debug.Log("Hello new splat maps");
+	}
 }
 

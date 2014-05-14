@@ -25,8 +25,8 @@ public class Agent : MonoBehaviour
 	public void Start() {
 		friends = new ArrayList();
 		dummies = new ArrayList();
-		particleSpeed = 10.0f;
-		particleCalibrate = 1.0f;
+		particleSpeed = 1.0f;
+		particleCalibrate = 0.1f;
 		
 		c1 = Color.green;
 		c2 = Color.green;
