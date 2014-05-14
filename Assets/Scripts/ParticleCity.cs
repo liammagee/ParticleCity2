@@ -22,12 +22,13 @@ public class ParticleCity : MonoBehaviour
 		agentNumber = gamestate.numAgents;
 		particleScale = 1.0f;
 		particleRange = 100f;
-		agents = new ArrayList(agentNumber);
 
 		Init();
 	}
 
 	public void Init() {
+
+		agents = new ArrayList(agentNumber);
 
 		// Do the borders conservatively
 		BorderControl borderControl = GameObject.Find("Border").GetComponent<BorderControl>();
@@ -138,7 +139,7 @@ public class ParticleCity : MonoBehaviour
 	}
 
 	public void MouseHandler() {
-		transform.Translate(Vector3.forward * Input.GetAxis("Mouse ScrollWheel") * 20);
+		transform.Translate(Vector3.forward * Input.GetAxis("Mouse ScrollWheel") * 100);
 	}
 
 

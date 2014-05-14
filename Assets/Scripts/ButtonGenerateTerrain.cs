@@ -10,8 +10,9 @@ public class ButtonGenerateTerrain : MonoBehaviour
 		randomTerrain.enabled = true;
 		randomTerrain.Generate();
 
-		ParticleCity particleCity = GameObject.Find("Main Camera").GetComponent<ParticleCity>();
-		particleCity.SoftRestart();
+		Application.LoadLevel (0);
+//		ParticleCity particleCity = GameObject.Find("Main Camera").GetComponent<ParticleCity>();
+//		particleCity.SoftRestart();
 
 	}
 }

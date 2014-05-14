@@ -7,7 +7,8 @@ public class RestartButtonEvents : MonoBehaviour
 
 	public void OnClick( dfControl control, dfMouseEventArgs mouseEvent )
 	{
-		ParticleCity particleCity = GameObject.Find("Main Camera").GetComponent<ParticleCity>();
-		particleCity.SoftRestart();
+		Application.LoadLevel (0);
+//		ParticleCity particleCity = GameObject.Find("Main Camera").GetComponent<ParticleCity>();
+//		particleCity.SoftRestart();
 	}
 }

@@ -2549,7 +2549,7 @@ public abstract class dfControl : MonoBehaviour, IDFControlHost, IComparable<dfC
 	/// <param name="force">Set to TRUE to force the layout, even if SuspendLayout
 	/// has been set to TRUE</param>
 	[HideInInspector]
-	public void ResetLayout( bool recursive = false, bool force = false )
+	public void ResetLayout( bool recursive 	= false, bool force = false )
 	{
 
 		if( shutdownInProgress )
