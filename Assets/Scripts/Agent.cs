@@ -20,6 +20,7 @@ public class Agent : MonoBehaviour
 	int linePositions;
 	static bool running;
 	Vector3 currentDirection;
+	Vector3 lastPosition;
 
 
 	public void Start() {
@@ -35,6 +36,8 @@ public class Agent : MonoBehaviour
 
 		using3d = false;
 		showNetwork = false;
+
+		lastPosition = gameObject.transform.position;
 
 		CalculateSpeed();		
 	}
@@ -52,25 +55,34 @@ public class Agent : MonoBehaviour
   private Vector3[] verts;
   private Vector2[] uvs;
   private int[] tris;
+  public float gravity = 20.0F;
 
-	public void FixedUpdate() {
+	public void Update() {
 		if (! running) 
 			return;
 
+		float x = gameObject.transform.position.x;
+		float y = gameObject.transform.position.z;
+		if (x < -512.0 || x >= 512.0 || y < -512.0 || y > 512.0)
+			return;
+
+		CharacterController controller = gameObject.GetComponent<CharacterController>();
 		Vector3 currentCalibration = new Vector3(0, 0, 0);
 		currentCalibration.x += (Random.Range(-1.0f, 1.0f) * particleCalibrate);
 		if (using3d)
 			currentCalibration.y += (Random.Range(-1.0f, 1.0f) * particleCalibrate);
-		else
-			currentCalibration.y += (Random.Range(-1.0f, 1.0f));
+		else if (! controller.isGrounded)
+			currentCalibration.y -= gravity * Time.deltaTime;
+			// currentCalibration.y = 0; //(Random.Range(-1.0f, 1.0f));
 		currentCalibration.z += (Random.Range(-1.0f, 1.0f) * particleCalibrate);
 		
 		currentDirection += currentCalibration;
 		// gameObject.rigidbody.AddForce(currentDirection);
 		// gameObject.transform.position += currentDirection;
-		CharacterController controller = gameObject.GetComponent<CharacterController>();
-		controller.SimpleMove(currentDirection);
-
+		// NOTE: Much faster than SimpleMove
+		controller.Move(currentDirection * Time.deltaTime);
+		//controller.SimpleMove(currentDirection);
+		
 		for (int j = 0; j < dummies.Count; j++) {
 			GameObject dummyObj = (GameObject)dummies[j];
 			Destroy(dummyObj.GetComponent("LineRenderer"));
@@ -170,7 +182,6 @@ public class Agent : MonoBehaviour
 		Grid grid = GameObject.Find("GridOrigin").GetComponent<Grid>();
 		if (grid.enabled)
 			grid.TurnOnCell(gameObject.transform.position);
-
 	}
 
 	Vector3[] MakeQuad(Vector3 s, Vector3 e, float w) {
@@ -189,9 +200,39 @@ public class Agent : MonoBehaviour
 		return q;
 	}
 
+	bool HasDroppedAltitude() {
+		return ((lastPosition.y - gameObject.transform.position.y) > 0.1f);
+	}
+
+	bool HasRaisedAltitude() {
+		return ((gameObject.transform.position.y - lastPosition.y) > 0.1f);
+	}
 
   void OnControllerColliderHit(ControllerColliderHit hit) {
   	GameState gameState = GameObject.Find("Main Camera").GetComponent<GameState>();
+  	Grid grid = GameObject.Find("GridOrigin").GetComponent<Grid>();
+		if (hit.collider.gameObject.name.Equals("Terrain")) {
+			
+	  	TerrainData terrainData = Terrain.activeTerrain.terrainData;
+	  	float terrainX = gameObject.transform.position.x + terrainData.size.x / 2f;
+	  	float terrainY = gameObject.transform.position.z + terrainData.size.z / 2f;
+	  	float height = terrainData.GetHeight((int)grid.GetHeightmapX((int)terrainX) , (int)grid.GetHeightmapY((int)terrainY));
+	  	float steepness = terrainData.GetSteepness((int)grid.GetHeightmapX((int)terrainX) , (int)grid.GetHeightmapY((int)terrainY));
+
+	  	// Over correction
+	  	if ((gameObject.transform.position.y < 2f || height < 1f)) {
+	  		/*
+	  		if (HasDroppedAltitude())
+	  			currentDirection /= 4f;
+  			if (HasRaisedAltitude())
+  				currentDirection *= 4f;
+  				*/
+	  		// Debug.Log("Ever get here?");
+	  		// currentDirection.x = -currentDirection.x;
+		  	// currentDirection.z = -currentDirection.z;
+	  	}
+	  	lastPosition = gameObject.transform.position;
+		}
 		if (hit.collider.gameObject.name.Equals("CubeBottomBorder") || hit.collider.gameObject.name.Equals("CubeTopBorder")) {
 			currentDirection.z = -currentDirection.z;
 		}

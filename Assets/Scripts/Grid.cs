@@ -108,6 +108,25 @@ public class Grid : MonoBehaviour
 		Debug.Log ("Alphamap Height in Cells: " + alphamapHeightPerCell);
 	}
 
+	public float GetHeightmapX(int terrainCoord) 
+	{
+		return terrainCoord * (heightmapWidth / (float)widthOfTerrain);
+	}
+
+	public float GetHeightmapY(int terrainCoord) 
+	{
+		return terrainCoord * (heightmapHeight / (float)heightOfTerrain);
+	}
+
+	public float GetAlphamapX(int terrainCoord) 
+	{
+		return terrainCoord * (alphamapWidth / (float)widthOfTerrain);
+	}
+
+	public float GetAlphamapY(int terrainCoord) 
+	{
+		return terrainCoord * (alphamapHeight / (float)heightOfTerrain);
+	}
 
 	void ConstructMesh() {
 
@@ -169,7 +188,13 @@ public class Grid : MonoBehaviour
 		PaintTerrain ();
 		PaintBuildings ();
 		ProcessCursorMesh ();
+		ClearCurrentCells();
 	}	
+
+	void ClearCurrentCells() 
+	{
+		currentCells = new Dictionary<Vector2, int> ();
+	}
 
 	void ProcessCursorMesh () {
 		RaycastToTerrain ();
@@ -364,42 +389,58 @@ public class Grid : MonoBehaviour
 				}
 			}
 		}
-		currentCells = new Dictionary<Vector2, int> ();
 	}
 
 	void PaintBuildings ()
 	{
 		bool buildBuildings = gameState.showBuildings;
-		if (buildBuildings && gridCells != null) {
-			foreach (KeyValuePair<Vector2, int> entry in gridCells) {
-				Vector2 actualPos = entry.Key;
-				int count = entry.Value;
-				int w = (int)actualPos.x;
-				int h = (int)actualPos.y;
-				if (count > 10 && count <= 40) {
-					GameObject dynamicObjects = GameObject.Find("DynamicObjects");
-					GameObject gameObject = null;
-					if (buildings.ContainsKey (actualPos)) {
-						gameObject = buildings [actualPos];
-						Vector3 scale = gameObject.transform.localScale;
-						gameObject.transform.localScale = new Vector3(scale.x, count * cellSize, scale.z);
-					}
-					else {
-						int x = (int)((w / (float)widthInCells) * widthOfTerrain) - (int)(widthOfTerrain / 2);
-						int y = (int)((h / (float)heightInCells) * heightOfTerrain) - (int)(heightOfTerrain / 2);
-						gameObject = GameObject.CreatePrimitive (PrimitiveType.Cube);
-						gameObject.name = ("Building at: (" + x + ", " + y + ")");
-						
-						// TODO: Use actual terrain height for y value
-						Vector3 position = new Vector3 (x, 0, y);
-						Vector3 scale = new Vector3 (cellSize, count * cellSize, cellSize);
-						gameObject.transform.position = position;
-						gameObject.transform.localScale = scale;
-						gameObject.transform.parent = dynamicObjects.transform;
-						buildings.Add (actualPos, gameObject);
+		if (buildBuildings) {
+			GameObject dynamicObjects = GameObject.Find("DynamicObjects");
+			if (currentCells != null) 
+			{
+				foreach (KeyValuePair<Vector2, int> entry in currentCells) {
+					Vector2 actualPos = entry.Key;
+					int count = entry.Value;
+					int w = (int)actualPos.x;
+					int h = (int)actualPos.y;
+
+					if (count == 10) {
+						if (! buildings.ContainsKey (actualPos)) {
+							Debug.Log ("Got here");
+							GameObject gameObject = null;
+							int x = (int)((w / (float)widthInCells) * widthOfTerrain) - (int)(widthOfTerrain / 2);
+							int y = (int)((h / (float)heightInCells) * heightOfTerrain) - (int)(heightOfTerrain / 2);
+							
+							float r = UnityEngine.Random.Range(0, 100);
+							if (r < gameState.chanceOfBuilding) {
+								gameObject = GameObject.CreatePrimitive (PrimitiveType.Cube);
+								gameObject.name = ("Building at: (" + x + ", " + y + ")");
+								
+								// TODO: Use actual terrain height for y value
+								float height = terrainData.GetHeight(x, y);
+								Vector3 position = new Vector3 (x, height, y);
+								Vector3 scale = new Vector3 (cellSize, count * cellSize, cellSize);
+								gameObject.transform.position = position;
+								gameObject.transform.localScale = scale;
+								gameObject.transform.parent = dynamicObjects.transform;
+								buildings.Add (actualPos, gameObject);
+							}
+						}
 					}
 				}
+
+				foreach (KeyValuePair<Vector2, GameObject> entry in buildings) 
+				{
+					Vector2 actualPos = entry.Key;
+					GameObject building = entry.Value;
+					Vector3 scale = building.transform.localScale;
+					building.transform.localScale = new Vector3(scale.x, scale.y * 1.01f, scale.z);
+				}
 			}
+		}
+		else 
+		{
+			// Remove the buildings if this flag is turned off?
 		}
 	}
  

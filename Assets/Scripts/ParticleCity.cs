@@ -4,6 +4,10 @@ using System.Collections.Generic;
 
 public class ParticleCity : MonoBehaviour 
 {
+
+	public float originX = 0;
+	public float originZ = 0;
+
 	int agentNumber;
 	public float particleScale;
 	float particleRange;
@@ -14,12 +18,14 @@ public class ParticleCity : MonoBehaviour
 	float panX = 0.0f;
 	float panY = 0.0f;
 	bool shiftHeld = false;
-
+	GameState gamestate;
 
 
 	public void Start () {
-		GameState gamestate = GameObject.Find("Main Camera").GetComponent<GameState>();
+		gamestate = GameObject.Find("Main Camera").GetComponent<GameState>();
 		agentNumber = gamestate.numAgents;
+
+
 		particleScale = 1.0f;
 		particleRange = 100f;
 
@@ -32,32 +38,49 @@ public class ParticleCity : MonoBehaviour
 
 		// Do the borders conservatively
 		BorderControl borderControl = GameObject.Find("Border").GetComponent<BorderControl>();
-		borderControl.RedoBorders(10f);
+		int boundarySize = gamestate.boundarySize;
+		if (boundarySize == 0)
+			boundarySize = 25;
+		borderControl.RedoBorders(boundarySize);
 
-		// Correct the y co-ordinate for the base agent
-		TerrainData terrainData = Terrain.activeTerrain.terrainData;
-		float x = 0; //terrainData.size.x / 2;
-		float z = 0; //terrainData.size.z / 2;
-		float height = terrainData.GetHeight((int)x, (int)z) + 6.0f;
-
-		GameObject baseAgent = GameObject.Find("BaseAgent");
-		baseAgent.transform.position = new Vector3(x, height, z);
+		// Update the dimensions
+		UpdateWorldDimensions();
 
 		// Spawn the right number of children
+		GameObject baseAgent = GameObject.Find("BaseAgent");
 		for (int i = 0; i < agentNumber; i++) {
 			SpawnAgent(baseAgent);
 		}
+	}
 
+	public void UpdateWorldDimensions() {
+		// Adjust the walls
+		GameObject[] walls = GameObject.FindGameObjectsWithTag("Wall");
+		foreach (GameObject wall in walls) 
+		{
+			wall.transform.position += new Vector3(originX, 0, originZ);
+		}
+		
+		// Adjust the baseAgent
+		TerrainData terrainData = Terrain.activeTerrain.terrainData;
+		float height = terrainData.GetHeight((int)originX, (int)originZ) + 6.0f;
+
+		GameObject baseAgent = GameObject.Find("BaseAgent");
+		baseAgent.transform.position = new Vector3(originX, height, originZ);
+
+		// Adjust the camera
+		GameObject camera = GameObject.Find ("Main Camera");
+		camera.transform.position = new Vector3(originX, camera.transform.position.y, originZ);
 	}
 
 	public void SpawnAgent(GameObject agent) {
 		// Random x and z values
-		float x = Random.Range(-particleRange, particleRange);
-		float z = Random.Range(-particleRange, particleRange);
+		float x = originX + Random.Range(-particleRange, particleRange);
+		float z = originZ + Random.Range(-particleRange, particleRange);
 
 		// Get the y value (approx) of the current position
 		TerrainData terrainData = Terrain.activeTerrain.terrainData;
-		float height = terrainData.GetHeight((int)x + 100, (int)z + 100) + 6.0f;
+		float height = terrainData.GetHeight((int)(x + terrainData.size.x), (int)(z + terrainData.size.z)) + 6.0f;
 
 		// Set the position and scale
 	  Vector3 position = new Vector3(x, height, z);

@@ -40,10 +40,17 @@ public class GameState : MonoBehaviour
 	public int numAgents;
 	public int speedAgents;
 	public int boundarySize;
+	public int chanceOfBuilding;
+
+	public int timeOrigin;
+	public string timeUnits;
+	public int timeSecondsPerUnit;
+
 	public bool showNetwork;
 	public bool showBuildings;
 	public bool showUpdatedTerrain;
 	public bool showGrid;
+
 
 	public void Start() {
 		if (numAgents == 0)
