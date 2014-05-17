@@ -51,6 +51,9 @@ public class GameState : MonoBehaviour
 	public bool showUpdatedTerrain;
 	public bool showGrid;
 
+	public float originX = 0;
+	public float originZ = 0;
+
 
 	public void Start() {
 		if (numAgents == 0)
@@ -63,14 +66,40 @@ public class GameState : MonoBehaviour
 		showBuildings = false;
 		showUpdatedTerrain = false;
 		showGrid = false;
+
+		InitiateClock();
 	}
 
-	public int getNumAgents() {
-		return numAgents;
+	private float internalClock;
+	private float lastTime;
+	private float currentTime;
+
+	public void InitiateClock() 
+	{
+		internalClock = this.timeOrigin;
+		currentTime = Time.time;
+		lastTime = Time.time;
 	}
 
-	public int getSpeedAgents() {
-		return speedAgents;
+	public void AdjustTimeScale(int timeSecondsPerUnit) 
+	{
+		this.timeSecondsPerUnit = timeSecondsPerUnit;
+		UpdateClock();
+	}
+
+	public void UpdateClock() 
+	{
+		currentTime = Time.time;
+		float elapsedTime = currentTime - lastTime;
+		internalClock += (elapsedTime / (float)this.timeSecondsPerUnit);
+		lastTime = currentTime;
+	}
+
+	public string GetCurrentTime() 
+	{
+		UpdateClock();
+		string format = System.String.Format( "{0}: {1,10:d}", this.timeUnits, (int)internalClock);
+		return format;
 	}
 }
 

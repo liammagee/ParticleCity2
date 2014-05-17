@@ -4,9 +4,9 @@ using System.Collections.Generic;
 
 public class ProgressSpeedAgentsEvents : MonoBehaviour 
 {
-
+	GameState gamestate = null;
 	public void Start() {
-		GameState gamestate = GameObject.Find("Main Camera").GetComponent<GameState>();
+		gamestate = GameObject.Find("Main Camera").GetComponent<GameState>();
 		dfProgressBar prog  = gameObject.GetComponents<dfProgressBar>()[0];
 		prog.Value = gamestate.speedAgents;
 	}
@@ -18,5 +18,9 @@ public class ProgressSpeedAgentsEvents : MonoBehaviour
 			agentScript.particleSpeed = value;
 			agentScript.CalculateSpeed();
 		}
+		gamestate.speedAgents = (int)value;
+		gamestate.AdjustTimeScale((int)(100 / value));
+//		Time.timeScale = (value / 10f);
+//		Time.fixedDeltaTime = (value / 10f);
 	}
 }

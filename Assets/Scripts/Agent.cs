@@ -21,7 +21,7 @@ public class Agent : MonoBehaviour
 	static bool running;
 	Vector3 currentDirection;
 	Vector3 lastPosition;
-
+	Grid grid;
 
 	public void Start() {
 		friends = new ArrayList();
@@ -38,6 +38,7 @@ public class Agent : MonoBehaviour
 		showNetwork = false;
 
 		lastPosition = gameObject.transform.position;
+		grid = GameObject.Find ("GridOrigin").GetComponent<Grid>();
 
 		CalculateSpeed();		
 	}
@@ -63,8 +64,9 @@ public class Agent : MonoBehaviour
 
 		float x = gameObject.transform.position.x;
 		float y = gameObject.transform.position.z;
-		if (x < -512.0 || x >= 512.0 || y < -512.0 || y > 512.0)
-			return;
+
+		if (!grid.InsideTerrain(gameObject.transform.position))
+		    return;
 
 		CharacterController controller = gameObject.GetComponent<CharacterController>();
 		Vector3 currentCalibration = new Vector3(0, 0, 0);
@@ -179,7 +181,6 @@ public class Agent : MonoBehaviour
 		}
 
 		// Turn on cells visited
-		Grid grid = GameObject.Find("GridOrigin").GetComponent<Grid>();
 		if (grid.enabled)
 			grid.TurnOnCell(gameObject.transform.position);
 	}

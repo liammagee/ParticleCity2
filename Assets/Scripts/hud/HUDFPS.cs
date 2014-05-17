@@ -26,6 +26,7 @@ public class HUDFPS : MonoBehaviour
 	
 	void Start()
 	{
+		label = GetComponent<dfLabel>();
 		if( label == null )
 		{
 			Debug.LogError( "FPS Counter needs a Label component!" );

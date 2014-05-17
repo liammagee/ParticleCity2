@@ -1015,7 +1015,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 421525144}
   m_LocalRotation: {x: 0, y: 1, z: 0, w: -1.62920685e-07}
-  m_LocalPosition: {x: -512, y: 0, z: -512}
+  m_LocalPosition: {x: -1024, y: 0, z: -1024}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -2989,7 +2989,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   originX: 0
-  originZ: -250
+  originZ: -500
   particleScale: 0
 --- !u!114 &1027179932
 MonoBehaviour:
@@ -3019,13 +3019,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 455c61ea39df647d7abc6754504fe83e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  numAgents: 2
+  numAgents: 10
   speedAgents: 10
   boundarySize: 0
   chanceOfBuilding: 30
   timeOrigin: 1800
   timeUnits: Years
-  timeSecondsPerUnit: 5
+  timeSecondsPerUnit: 10
   showNetwork: 0
   showBuildings: 0
   showUpdatedTerrain: 0
@@ -4366,7 +4366,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1564962232}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: a815fb324df7241538c84316c74ff78f, type: 3}
+  m_Script: {fileID: 11500000, guid: 4708dade9a41c48fd8223f040845d463, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!65 &1564962235
@@ -4889,7 +4889,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dc8eaabfa99ce4e8fa92f5a11a5b1752, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cellSize: 2
+  cellSize: 16
   terrain: {fileID: 0}
   indicatorSize: 1
   indicatorOffsetY: 5
@@ -5130,7 +5130,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1987736458}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: .00130208337, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: .00130208337, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1344735681}

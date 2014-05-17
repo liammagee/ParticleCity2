@@ -23,9 +23,6 @@ public class HUDTime : MonoBehaviour
 	
 	void Update()
 	{
-		int timeElapsed = (int)(Time.timeSinceLevelLoad / gameState.timeSecondsPerUnit);
-		int timePoint = gameState.timeOrigin + timeElapsed;
-		string format = System.String.Format( "{0}: {1,10:d}", gameState.timeUnits, timePoint);
-		label.Text = format;
+		label.Text = gameState.GetCurrentTime();
 	}
 }

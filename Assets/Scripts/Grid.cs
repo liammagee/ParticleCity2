@@ -51,8 +51,6 @@ public class Grid : MonoBehaviour
 
 	void Start ()
 	{
-		cellSize = 16;
-
 		terrain = Terrain.activeTerrain;
 		terrainData = terrain.terrainData;
 		terrainSize = terrainData.size;
@@ -126,6 +124,12 @@ public class Grid : MonoBehaviour
 	public float GetAlphamapY(int terrainCoord) 
 	{
 		return terrainCoord * (alphamapHeight / (float)heightOfTerrain);
+	}
+
+	public bool InsideTerrain(Vector3 position) {
+		float x = position.x;
+		float y = position.z;
+		return (x > -(widthOfTerrain / 2f) && x < (widthOfTerrain / 2f) && y > -(heightOfTerrain / 2f) && y < (heightOfTerrain / 2f));
 	}
 
 	void ConstructMesh() {
@@ -396,6 +400,7 @@ public class Grid : MonoBehaviour
 		bool buildBuildings = gameState.showBuildings;
 		if (buildBuildings) {
 			GameObject dynamicObjects = GameObject.Find("DynamicObjects");
+			float buildingsDimension = cellSize;
 			if (currentCells != null) 
 			{
 				foreach (KeyValuePair<Vector2, int> entry in currentCells) {
@@ -403,39 +408,38 @@ public class Grid : MonoBehaviour
 					int count = entry.Value;
 					int w = (int)actualPos.x;
 					int h = (int)actualPos.y;
+					if (! buildings.ContainsKey (actualPos)) {
 
-					if (count == 10) {
-						if (! buildings.ContainsKey (actualPos)) {
-							Debug.Log ("Got here");
-							GameObject gameObject = null;
-							int x = (int)((w / (float)widthInCells) * widthOfTerrain) - (int)(widthOfTerrain / 2);
-							int y = (int)((h / (float)heightInCells) * heightOfTerrain) - (int)(heightOfTerrain / 2);
+						GameObject gameObject = null;
+						int x = (int)((w / (float)widthInCells) * widthOfTerrain);
+						int y = (int)((h / (float)heightInCells) * heightOfTerrain);
+						int normalisedX = x - (int)(widthOfTerrain / 2);
+						int normalisedY = y - (int)(heightOfTerrain / 2);
+						
+						float r = UnityEngine.Random.Range(0, 100);
+						if (r < gameState.chanceOfBuilding) {
+							gameObject = GameObject.CreatePrimitive (PrimitiveType.Cube);
+							float height = terrainData.GetHeight((int)GetHeightmapX(x), (int)GetHeightmapY(y));
+							gameObject.name = ("Building at: (" + normalisedX + ", " + normalisedY + ", " + height + ")");
 							
-							float r = UnityEngine.Random.Range(0, 100);
-							if (r < gameState.chanceOfBuilding) {
-								gameObject = GameObject.CreatePrimitive (PrimitiveType.Cube);
-								gameObject.name = ("Building at: (" + x + ", " + y + ")");
-								
-								// TODO: Use actual terrain height for y value
-								float height = terrainData.GetHeight(x, y);
-								Vector3 position = new Vector3 (x, height, y);
-								Vector3 scale = new Vector3 (cellSize, count * cellSize, cellSize);
-								gameObject.transform.position = position;
-								gameObject.transform.localScale = scale;
-								gameObject.transform.parent = dynamicObjects.transform;
-								buildings.Add (actualPos, gameObject);
-							}
+							// TODO: Use actual terrain height for y value
+							Vector3 position = new Vector3 (normalisedX, height, normalisedY);
+							Vector3 scale = new Vector3 (buildingsDimension, buildingsDimension, buildingsDimension);
+							gameObject.transform.position = position;
+							gameObject.transform.localScale = scale;
+							gameObject.transform.parent = dynamicObjects.transform;
+							buildings.Add (actualPos, gameObject);
 						}
 					}
 				}
 
-				foreach (KeyValuePair<Vector2, GameObject> entry in buildings) 
-				{
-					Vector2 actualPos = entry.Key;
-					GameObject building = entry.Value;
-					Vector3 scale = building.transform.localScale;
-					building.transform.localScale = new Vector3(scale.x, scale.y * 1.01f, scale.z);
-				}
+//				foreach (KeyValuePair<Vector2, GameObject> entry in buildings) 
+//				{
+//					Vector2 actualPos = entry.Key;
+//					GameObject building = entry.Value;
+//					Vector3 scale = building.transform.localScale;
+//					building.transform.localScale = new Vector3(scale.x, scale.y * 1.01f, scale.z);
+//				}
 			}
 		}
 		else 

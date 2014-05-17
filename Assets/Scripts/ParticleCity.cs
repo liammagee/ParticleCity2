@@ -5,8 +5,6 @@ using System.Collections.Generic;
 public class ParticleCity : MonoBehaviour 
 {
 
-	public float originX = 0;
-	public float originZ = 0;
 
 	int agentNumber;
 	public float particleScale;
@@ -27,7 +25,7 @@ public class ParticleCity : MonoBehaviour
 
 
 		particleScale = 1.0f;
-		particleRange = 100f;
+		particleRange = 10f;
 
 		Init();
 	}
@@ -58,32 +56,33 @@ public class ParticleCity : MonoBehaviour
 		GameObject[] walls = GameObject.FindGameObjectsWithTag("Wall");
 		foreach (GameObject wall in walls) 
 		{
-			wall.transform.position += new Vector3(originX, 0, originZ);
+			wall.transform.position += new Vector3(gamestate.originX, 0, gamestate.originZ);
 		}
 		
 		// Adjust the baseAgent
 		TerrainData terrainData = Terrain.activeTerrain.terrainData;
-		float height = terrainData.GetHeight((int)originX, (int)originZ) + 6.0f;
+		float height = terrainData.GetHeight((int)gamestate.originX, (int)gamestate.originZ) + 6.0f;
 
 		GameObject baseAgent = GameObject.Find("BaseAgent");
-		baseAgent.transform.position = new Vector3(originX, height, originZ);
+		baseAgent.transform.position = new Vector3(gamestate.originX, height, gamestate.originZ);
 
 		// Adjust the camera
 		GameObject camera = GameObject.Find ("Main Camera");
-		camera.transform.position = new Vector3(originX, camera.transform.position.y, originZ);
+		camera.transform.position = new Vector3(gamestate.originX, camera.transform.position.y, gamestate.originZ);
 	}
 
 	public void SpawnAgent(GameObject agent) {
+		Grid grid = GameObject.Find ("GridOrigin").GetComponent<Grid>();
 		// Random x and z values
-		float x = originX + Random.Range(-particleRange, particleRange);
-		float z = originZ + Random.Range(-particleRange, particleRange);
+		float x = gamestate.originX + Random.Range(-particleRange, particleRange);
+		float z = gamestate.originZ + Random.Range(-particleRange, particleRange);
 
 		// Get the y value (approx) of the current position
 		TerrainData terrainData = Terrain.activeTerrain.terrainData;
-		float height = terrainData.GetHeight((int)(x + terrainData.size.x), (int)(z + terrainData.size.z)) + 6.0f;
+		float height = terrainData.GetHeight((int)(grid.GetHeightmapX( (int)(x + terrainData.size.x))), (int)(grid.GetHeightmapY( (int)(z + terrainData.size.z)))) + 6.0f;
 
 		// Set the position and scale
-	  Vector3 position = new Vector3(x, height, z);
+		Vector3 position = new Vector3(x, height, z);
 		Vector3 scale = new Vector3(particleScale, particleScale, particleScale);
 
 		// Instantiate the new agent
@@ -100,6 +99,8 @@ public class ParticleCity : MonoBehaviour
 	}
 
 	public void ResizeAgents(int newSize) {
+		if (agents == null)
+			agents = new ArrayList(newSize);
 		if (newSize < agents.Count) {
 			for (int i = newSize; i < agents.Count ;i++) {
 				GameObject agent = (GameObject)agents[i];
