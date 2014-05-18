@@ -10,18 +10,32 @@ public class Agent : MonoBehaviour
 	public bool using3d;
 	public bool showNetwork;
 
-	/// Private variables
+	/// Network variables
 	private ArrayList friends;
 	private ArrayList dummies;
-
 	Color c1;
 	Color c2;
+
+	// Movement variables
 	float particleCalibrate;
 	int linePositions;
 	static bool running;
 	Vector3 currentDirection;
 	Vector3 lastPosition;
 	Grid grid;
+	GameState gameState;
+
+	// Health statistics
+	public float health = 100f;
+	public float degredation = 100f;
+
+
+	// Physics variables
+	private Mesh mesh;
+	private Vector3[] verts;
+	private Vector2[] uvs;
+	private int[] tris;
+	public float gravity = 20.0F;
 
 	public void Start() {
 		friends = new ArrayList();
@@ -32,13 +46,13 @@ public class Agent : MonoBehaviour
 		c1 = Color.green;
 		c2 = Color.green;
 		running = true;
-		//linePositions = 20;
 
 		using3d = false;
 		showNetwork = false;
 
 		lastPosition = gameObject.transform.position;
 		grid = GameObject.Find ("GridOrigin").GetComponent<Grid>();
+		gameState = GameObject.Find ("Main Camera").GetComponent<GameState>();
 
 		CalculateSpeed();		
 	}
@@ -46,17 +60,12 @@ public class Agent : MonoBehaviour
 	public void CalculateSpeed() {
 		float dirX = (Random.Range(-1.0f, 1.0f) * particleSpeed);
 		float dirY = 0;
-		if (using3d)
+		if (gameState.using3d)
 			dirY = (Random.Range(-1.0f, 1.0f) * particleSpeed);
 		float dirZ = (Random.Range(-1.0f, 1.0f) * particleSpeed);
 		currentDirection = new Vector3(dirX, dirY, dirZ);
 	}
 
-	private Mesh mesh;
-  private Vector3[] verts;
-  private Vector2[] uvs;
-  private int[] tris;
-  public float gravity = 20.0F;
 
 	public void Update() {
 		if (! running) 
@@ -71,7 +80,7 @@ public class Agent : MonoBehaviour
 		CharacterController controller = gameObject.GetComponent<CharacterController>();
 		Vector3 currentCalibration = new Vector3(0, 0, 0);
 		currentCalibration.x += (Random.Range(-1.0f, 1.0f) * particleCalibrate);
-		if (using3d)
+		if (gameState.using3d)
 			currentCalibration.y += (Random.Range(-1.0f, 1.0f) * particleCalibrate);
 		else if (! controller.isGrounded)
 			currentCalibration.y -= gravity * Time.deltaTime;
@@ -93,8 +102,7 @@ public class Agent : MonoBehaviour
 
 		// Calculate the patch
 
-  	GameState gameState = GameObject.Find("Main Camera").GetComponent<GameState>();
-		if (gameState.showNetwork) {
+  		if (gameState.showNetwork) {
 
 
 			// Do mesh here instead

@@ -8,6 +8,7 @@ public class HUDTime : MonoBehaviour
 	private float startTime;
 	private dfLabel label;
 	private GameState gameState;
+	private int counter;
 
 	void Start()
 	{
@@ -24,5 +25,9 @@ public class HUDTime : MonoBehaviour
 	void Update()
 	{
 		label.Text = gameState.GetCurrentTime();
+		if (gameState.ChangeInTime()) {
+			counter++;
+			Debug.Log ("time has changed " + counter);
+		}
 	}
 }

@@ -17,11 +17,11 @@ public class ListboxView : MonoBehaviour
 				camera.transform.rotation = Quaternion.Euler(90f, 180f, 0f);
 				break;
 			case 1:
-				camera.transform.position = new Vector3(gamestate.originX + 0f, 350f, gamestate.originZ + -300f);
+				camera.transform.position = new Vector3(0f, 350f, -300f);
 				camera.transform.rotation = Quaternion.Euler(45f, 180f, 0f);
 				break;
 			case 2:
-				camera.transform.position = new Vector3(gamestate.originX + -350f, 350f, gamestate.originZ + -350f);
+				camera.transform.position = new Vector3(-350f, 350f, -350f);
 				camera.transform.rotation = Quaternion.Euler(30f, 225f, 0f);
 				break;
 			case 3:

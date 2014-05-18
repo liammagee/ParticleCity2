@@ -37,23 +37,36 @@ public class GameState : MonoBehaviour
 	// ---------------------------------------------------------------------------------------------------
 	
 
+	// Population settings
 	public int numAgents;
 	public int speedAgents;
+	public float percentageOfNewAgentsPerTimeUnit;
+	public float variationOfNewAgents;
+	public float chanceOfReproduction;
+
+	// Environment settings
 	public int boundarySize;
 	public int chanceOfBuilding;
 
-	public int timeOrigin;
-	public string timeUnits;
-	public int timeSecondsPerUnit;
+	// Origin of agent placements
+	public float originX = 0;
+	public float originZ = 0;
 
-	public bool showNetwork;
+	// Checable Settings
+	public bool using3d = false;
+	public bool showNetwork = false;
 	public bool showBuildings;
 	public bool showUpdatedTerrain;
 	public bool showGrid;
 
-	public float originX = 0;
-	public float originZ = 0;
-
+	// Time variables
+	public int timeOrigin;
+	public string timeUnits;
+	public int timeSecondsPerUnit;
+	private float lastTimeInUnits;
+	private float currentTimeInUnits;
+	private bool changedTimeUnit;
+	private float lastRecordedTime;
 
 	public void Start() {
 		if (numAgents == 0)
@@ -70,36 +83,52 @@ public class GameState : MonoBehaviour
 		InitiateClock();
 	}
 
-	private float internalClock;
-	private float lastTime;
-	private float currentTime;
+	public void Update() 
+	{
+		UpdateClock();
+	}
 
 	public void InitiateClock() 
 	{
-		internalClock = this.timeOrigin;
-		currentTime = Time.time;
-		lastTime = Time.time;
+		currentTimeInUnits = timeOrigin;
+		lastTimeInUnits = currentTimeInUnits;
+		changedTimeUnit = false;
+		lastRecordedTime = Time.time;
+	}
+	
+	public bool ChangeInTime() 
+	{
+		return changedTimeUnit;
+	}
+	
+	public float CurrentTimeInUnits() 
+	{
+		return currentTimeInUnits;
+	}
+	
+	public float LastTimeInUnits() 
+	{
+		return lastTimeInUnits;
 	}
 
-	public void AdjustTimeScale(int timeSecondsPerUnit) 
+	public void AdjustTimeScale(int value) 
 	{
-		this.timeSecondsPerUnit = timeSecondsPerUnit;
-		UpdateClock();
+		timeSecondsPerUnit = value;
 	}
 
 	public void UpdateClock() 
 	{
-		currentTime = Time.time;
-		float elapsedTime = currentTime - lastTime;
-		internalClock += (elapsedTime / (float)this.timeSecondsPerUnit);
-		lastTime = currentTime;
+		float currentTime = Time.time;
+		float elapsedTime = currentTime - lastRecordedTime;
+		currentTimeInUnits += (elapsedTime / (float)timeSecondsPerUnit);
+		changedTimeUnit = ((int)currentTimeInUnits > (int)lastTimeInUnits);
+		lastTimeInUnits = currentTimeInUnits;
+		lastRecordedTime = currentTime;
 	}
 
 	public string GetCurrentTime() 
 	{
-		UpdateClock();
-		string format = System.String.Format( "{0}: {1,10:d}", this.timeUnits, (int)internalClock);
-		return format;
+		return System.String.Format( "{0}: {1,10}", timeUnits, (int)currentTimeInUnits);
 	}
 }
 

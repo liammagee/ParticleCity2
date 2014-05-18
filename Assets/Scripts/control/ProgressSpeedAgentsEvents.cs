@@ -20,7 +20,5 @@ public class ProgressSpeedAgentsEvents : MonoBehaviour
 		}
 		gamestate.speedAgents = (int)value;
 		gamestate.AdjustTimeScale((int)(100 / value));
-//		Time.timeScale = (value / 10f);
-//		Time.fixedDeltaTime = (value / 10f);
 	}
 }
