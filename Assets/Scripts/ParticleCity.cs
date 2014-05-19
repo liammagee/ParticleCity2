@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using FiercePlanet;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -46,9 +47,111 @@ public class ParticleCity : MonoBehaviour
 
 		// Spawn the right number of children
 		GameObject baseAgent = GameObject.Find("BaseAgent");
+		float lifeExpectancy = LifeExpectancy(gamestate.CurrentTimeInUnits());
 		for (int i = 0; i < agentNumber; i++) {
 			SpawnAgent(baseAgent);
+			Agent agent = baseAgent.GetComponent<Agent>();
+			float currentAge = Random.Range (0f, lifeExpectancy * 2f);
+			agent.SetAge(currentAge);
 		}
+
+		// Set up coroutine to spawn migrating and reproducing agents
+		StartCoroutine("Populate");
+	}
+
+	/// <summary>
+	/// Handles asynchronous population of the simulation model.
+	/// </summary>
+	IEnumerator Populate() {
+		GameObject baseAgent = GameObject.Find("BaseAgent");
+		for (;;) {
+
+			// Do net migration
+			float percent = gamestate.percentageOfNewAgentsPerTimeUnit / 100f;
+			float variation = gamestate.variationOfNewAgents / 100f;
+			float multiplier = percent + Random.Range(- variation, variation);
+			GameObject[] agents = GameObject.FindGameObjectsWithTag("Agent");
+
+			int currentAgents = agents.Length;
+//			float probabilty = currentAgents * multiplier * (1 / (float)gamestate.timeSecondsPerUnit);
+			float probabilty = currentAgents * multiplier;
+			int agentsToSpawn = Mathf.FloorToInt(probabilty);
+			float chance = Random.Range(0f, 1f);
+			if (chance < probabilty - agentsToSpawn)
+				agentsToSpawn++;
+			float lifeExpectancy = LifeExpectancy(gamestate.CurrentTimeInUnits());
+			for (int i = 0; i < agentsToSpawn ; i++) {
+				SpawnAgent(baseAgent);
+				Agent agent = baseAgent.GetComponent<Agent>();
+				float currentAge = Random.Range (0f, lifeExpectancy * 2f);
+				agent.SetAge(currentAge);
+			}
+
+
+			// Reproduction
+
+
+			// Life expectancy - USE VERY CRUDE APPROXIMATION FOR NOW
+			// UPDATE, e.g. from http://www.gapminder.org/data/
+			List<GameObject> deadAgents = new List<GameObject>();
+			for (int i = 0; i < agents.Length; i++) 
+			{
+				Agent agent = agents[i].GetComponent<Agent>();
+				float age = agent.GetAge();
+				float thisAgentsLifeExpectancy = LifeExpectancyAtAge(gamestate.CurrentTimeInUnits(), agent.GetAge());
+				float prob = Random.Range (0, thisAgentsLifeExpectancy);
+				if (prob < 1.0f) {
+					deadAgents.Add(agents[i]);
+				}
+			}
+			foreach (GameObject deadAgent in deadAgents) {
+				Debug.Log ("Destroying " + deadAgent.name);
+				deadAgent.SetActive(false);
+			}
+
+
+			// To drip feed 
+			//			yield return new WaitForSeconds(1f);
+			yield return new WaitForSeconds((float)gamestate.timeSecondsPerUnit);
+		}
+	}
+
+
+
+	private float LifeExpectancyAtAge(float time, float age) 
+	{
+		float expectancy = LifeExpectancy(time);
+		if (age > expectancy)
+			expectancy = age;
+		return expectancy - age;
+	}
+
+	/// <summary>
+	/// Very crude approximation to Australia's changing life expectancy
+	/// </summary>
+	/// <returns>The expectancy.</returns>
+	/// <param name="time">Time.</param>
+	private float LifeExpectancy(float time) {
+		float baseExpectancy = 0f;
+		if (time >= 1871 && time < 1900) {
+			baseExpectancy = 41.9882f * 2f;
+		}
+		else if (time >= 1900 && time < 1930) {
+			baseExpectancy = 57.8647f * 2f;
+		}
+		else if (time >= 1931 && time < 1960) {
+			baseExpectancy = 68.46f * 2f;
+		}
+		else if (time >= 1871 && time < 1900) {
+			baseExpectancy = 72.84f * 2f;
+		}
+		else if (time >= 1991) {
+			baseExpectancy = 79.93f * 2f;
+		}
+		else {
+			baseExpectancy = 34.05f * 2f;
+		}
+		return baseExpectancy;
 	}
 
 	public void UpdateWorldDimensions() {

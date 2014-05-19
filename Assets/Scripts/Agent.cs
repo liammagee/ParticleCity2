@@ -2,6 +2,10 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
+namespace FiercePlanet {
+
+
+
 public class Agent : MonoBehaviour 
 {
 
@@ -26,8 +30,14 @@ public class Agent : MonoBehaviour
 	GameState gameState;
 
 	// Health statistics
-	public float health = 100f;
-	public float degredation = 100f;
+	private float health = 100f;
+	private float degradation = 100f;
+
+	// General statistics
+	public enum Gender { Male, Female, Unspecified };
+	private Gender gender;
+	public float birthdate;
+
 
 
 	// Physics variables
@@ -54,8 +64,35 @@ public class Agent : MonoBehaviour
 		grid = GameObject.Find ("GridOrigin").GetComponent<Grid>();
 		gameState = GameObject.Find ("Main Camera").GetComponent<GameState>();
 
+		birthdate = gameState.CurrentTimeInUnits();
+		int genderInt = Mathf.FloorToInt(Random.Range(0, 99) / 49f);
+		if (genderInt == 0) {
+			gender = Gender.Male;
+		}
+		else if (genderInt == 1) {
+			gender = Gender.Female;
+		}
+		else {
+			gender = Gender.Unspecified;
+		}
+
+		// Setup functions
 		CalculateSpeed();		
+		ColoriseGender();
 	}
+
+	public float GetAge() {
+		if (gameState == null)
+			gameState = GameObject.Find ("Main Camera").GetComponent<GameState>();
+		return gameState.CurrentTimeInUnits() - birthdate;
+	}
+
+	public void SetAge(float age) {
+		if (gameState == null)
+			gameState = GameObject.Find ("Main Camera").GetComponent<GameState>();
+		birthdate = gameState.CurrentTimeInUnits() - age;
+	}
+
 
 	public void CalculateSpeed() {
 		float dirX = (Random.Range(-1.0f, 1.0f) * particleSpeed);
@@ -64,6 +101,18 @@ public class Agent : MonoBehaviour
 			dirY = (Random.Range(-1.0f, 1.0f) * particleSpeed);
 		float dirZ = (Random.Range(-1.0f, 1.0f) * particleSpeed);
 		currentDirection = new Vector3(dirX, dirY, dirZ);
+	}
+
+	public void ColoriseGender() {
+		if (gender == Gender.Male) {
+			gameObject.renderer.material.color = Color.blue;
+		}
+		else if (gender == Gender.Female) {
+				gameObject.renderer.material.color = Color.magenta;
+		}
+		else {
+				gameObject.renderer.material.color = Color.white;
+		}
 	}
 
 
@@ -88,11 +137,9 @@ public class Agent : MonoBehaviour
 		currentCalibration.z += (Random.Range(-1.0f, 1.0f) * particleCalibrate);
 		
 		currentDirection += currentCalibration;
-		// gameObject.rigidbody.AddForce(currentDirection);
-		// gameObject.transform.position += currentDirection;
 		// NOTE: Much faster than SimpleMove
 		controller.Move(currentDirection * Time.deltaTime);
-		//controller.SimpleMove(currentDirection);
+		
 		
 		for (int j = 0; j < dummies.Count; j++) {
 			GameObject dummyObj = (GameObject)dummies[j];
@@ -297,4 +344,6 @@ public class Agent : MonoBehaviour
 		pos.z = 0;
 		gameObject.transform.position = pos;
 	}
+}
+
 }

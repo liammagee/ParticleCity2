@@ -30,9 +30,9 @@ namespace LibNoise.Unity.Operator
 		#region Fields
 
 		private double m_power = 1.0;
-		private Perlin m_xDistort = null;
-		private Perlin m_yDistort = null;
-		private Perlin m_zDistort = null;
+		private LibNoise.Unity.Generator.Perlin m_xDistort = null;
+		private LibNoise.Unity.Generator.Perlin m_yDistort = null;
+		private LibNoise.Unity.Generator.Perlin m_zDistort = null;
 
 		#endregion
 
@@ -44,16 +44,16 @@ namespace LibNoise.Unity.Operator
 		public Turbulence()
 			: base(1)
 		{
-			this.m_xDistort = new Perlin();
-			this.m_yDistort = new Perlin();
-			this.m_zDistort = new Perlin();
+			this.m_xDistort = new LibNoise.Unity.Generator.Perlin();
+			this.m_yDistort = new LibNoise.Unity.Generator.Perlin();
+			this.m_zDistort = new LibNoise.Unity.Generator.Perlin();
 		}
 
 		/// <summary>
 		/// Initializes a new instance of Turbulence.
 		/// </summary>
 		public Turbulence(double power, ModuleBase input)
-			: this(new Perlin(), new Perlin(), new Perlin(), power, input)
+			: this(new LibNoise.Unity.Generator.Perlin(), new LibNoise.Unity.Generator.Perlin(), new LibNoise.Unity.Generator.Perlin(), power, input)
 		{
 		}
 
@@ -65,7 +65,7 @@ namespace LibNoise.Unity.Operator
 		/// <param name="z">The perlin noise to apply on the z-axis.</param>
 		/// <param name="power">The power of the turbulence.</param>
 		/// <param name="input">The input module.</param>
-		public Turbulence(Perlin x, Perlin y, Perlin z, double power, ModuleBase input)
+		public Turbulence(LibNoise.Unity.Generator.Perlin x, LibNoise.Unity.Generator.Perlin y, LibNoise.Unity.Generator.Perlin z, double power, ModuleBase input)
 			: base(1)
 		{
 			this.m_xDistort = x;

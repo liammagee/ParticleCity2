@@ -415,11 +415,11 @@ public class Grid : MonoBehaviour
 						int y = (int)((h / (float)heightInCells) * heightOfTerrain);
 						int normalisedX = x - (int)(widthOfTerrain / 2);
 						int normalisedY = y - (int)(heightOfTerrain / 2);
-						
+						float height = terrainData.GetHeight((int)GetHeightmapX(x), (int)GetHeightmapY(y));
+
 						float r = UnityEngine.Random.Range(0, 100);
-						if (r < gameState.chanceOfBuilding) {
+						if (r < gameState.chanceOfBuilding && height > 1.0f) {
 							gameObject = GameObject.CreatePrimitive (PrimitiveType.Cube);
-							float height = terrainData.GetHeight((int)GetHeightmapX(x), (int)GetHeightmapY(y));
 							gameObject.name = ("Building at: (" + normalisedX + ", " + normalisedY + ", " + height + ")");
 							
 							// TODO: Use actual terrain height for y value

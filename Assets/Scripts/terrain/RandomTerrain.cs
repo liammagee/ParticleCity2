@@ -40,13 +40,13 @@ public class RandomTerrain : MonoBehaviour {
         	break;             	         	
         	
           	case NoiseTypeGenerator.Mix:            	
-        	Perlin perlin = new Perlin();
+        	LibNoise.Unity.Generator.Perlin perlin = new LibNoise.Unity.Generator.Perlin();
         	RiggedMultifractal rigged = new RiggedMultifractal();
         	moduleBase = new Add(perlin, rigged);
         	break;
         	
         	default:
-        	moduleBase = new Perlin();
+        	moduleBase = new LibNoise.Unity.Generator.Perlin();
         	break;
         	
         }
