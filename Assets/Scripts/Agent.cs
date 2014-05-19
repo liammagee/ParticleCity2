@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace FiercePlanet {
 
 
-
+[RequireComponent (typeof (GameState))]
 public class Agent : MonoBehaviour 
 {
 
@@ -36,9 +36,13 @@ public class Agent : MonoBehaviour
 	// General statistics
 	public enum Gender { Male, Female, Unspecified };
 	private Gender gender;
-	public float birthdate;
+	private float birthdate;
+	
+	private List<Agent> children;
 
-
+	private Agent mother;
+	private Agent father;
+	
 
 	// Physics variables
 	private Mesh mesh;
@@ -50,6 +54,7 @@ public class Agent : MonoBehaviour
 	public void Start() {
 		friends = new ArrayList();
 		dummies = new ArrayList();
+		children = new List<Agent> ();
 		particleSpeed = 1.0f;
 		particleCalibrate = 0.1f;
 		
@@ -64,7 +69,8 @@ public class Agent : MonoBehaviour
 		grid = GameObject.Find ("GridOrigin").GetComponent<Grid>();
 		gameState = GameObject.Find ("Main Camera").GetComponent<GameState>();
 
-		birthdate = gameState.CurrentTimeInUnits();
+		if (birthdate == 0)
+			birthdate = gameState.CurrentTimeInUnits();
 		int genderInt = Mathf.FloorToInt(Random.Range(0, 99) / 49f);
 		if (genderInt == 0) {
 			gender = Gender.Male;
@@ -81,16 +87,40 @@ public class Agent : MonoBehaviour
 		ColoriseGender();
 	}
 
-	public float GetAge() {
-		if (gameState == null)
-			gameState = GameObject.Find ("Main Camera").GetComponent<GameState>();
-		return gameState.CurrentTimeInUnits() - birthdate;
+	public float GetBirthdate() {
+		return birthdate;
 	}
 
-	public void SetAge(float age) {
-		if (gameState == null)
-			gameState = GameObject.Find ("Main Camera").GetComponent<GameState>();
-		birthdate = gameState.CurrentTimeInUnits() - age;
+	public bool CanReproduce(float time)
+	{
+			float age = time - birthdate;
+			return (gender == Gender.Female && age >= 15 && age <= 45);
+	}
+
+	public void AddChild(Agent agent) 
+	{
+			children.Add (agent);			
+	}
+	
+		public List<Agent> GetChildren()
+		{
+			return children;		
+		}
+		
+		public void SetMother(Agent agent) 
+		{
+			mother = agent;			
+		}
+		
+		public void SetFather(Agent agent) 
+		{
+			father = agent;			
+		}
+
+	public void SetBirthdate(float bd) {
+		birthdate = bd;
+		Debug.Log ("Details: ");
+		Debug.Log (birthdate);
 	}
 
 

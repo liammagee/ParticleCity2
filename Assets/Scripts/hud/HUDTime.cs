@@ -2,6 +2,7 @@ using System;
 using UnityEngine;
 using System.Collections;
 
+[RequireComponent (typeof (GameState))]
 public class HUDTime : MonoBehaviour 
 {
 	

@@ -2,7 +2,9 @@
 using FiercePlanet;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
+[RequireComponent (typeof (GameState))]
 public class ParticleCity : MonoBehaviour 
 {
 
@@ -17,15 +19,15 @@ public class ParticleCity : MonoBehaviour
 	float panX = 0.0f;
 	float panY = 0.0f;
 	bool shiftHeld = false;
-	GameState gamestate;
+	public GameState gamestate;
 
 
 	public void Start () {
-		gamestate = GameObject.Find("Main Camera").GetComponent<GameState>();
+		if (gamestate == null)
+			gamestate = GameObject.Find("Main Camera").GetComponent<GameState>();
 		agentNumber = gamestate.numAgents;
 
 
-		particleScale = 1.0f;
 		particleRange = 10f;
 
 		Init();
@@ -47,12 +49,8 @@ public class ParticleCity : MonoBehaviour
 
 		// Spawn the right number of children
 		GameObject baseAgent = GameObject.Find("BaseAgent");
-		float lifeExpectancy = LifeExpectancy(gamestate.CurrentTimeInUnits());
 		for (int i = 0; i < agentNumber; i++) {
 			SpawnAgent(baseAgent);
-			Agent agent = baseAgent.GetComponent<Agent>();
-			float currentAge = Random.Range (0f, lifeExpectancy * 2f);
-			agent.SetAge(currentAge);
 		}
 
 		// Set up coroutine to spawn migrating and reproducing agents
@@ -65,6 +63,7 @@ public class ParticleCity : MonoBehaviour
 	IEnumerator Populate() {
 		GameObject baseAgent = GameObject.Find("BaseAgent");
 		for (;;) {
+			float ct = gamestate.CurrentTimeInUnits();
 
 			// Do net migration
 			float percent = gamestate.percentageOfNewAgentsPerTimeUnit / 100f;
@@ -79,16 +78,31 @@ public class ParticleCity : MonoBehaviour
 			float chance = Random.Range(0f, 1f);
 			if (chance < probabilty - agentsToSpawn)
 				agentsToSpawn++;
-			float lifeExpectancy = LifeExpectancy(gamestate.CurrentTimeInUnits());
 			for (int i = 0; i < agentsToSpawn ; i++) {
 				SpawnAgent(baseAgent);
-				Agent agent = baseAgent.GetComponent<Agent>();
-				float currentAge = Random.Range (0f, lifeExpectancy * 2f);
-				agent.SetAge(currentAge);
 			}
 
 
 			// Reproduction
+			IEnumerable<Agent> reproducableFemales = agents.Select(c => c.GetComponent<Agent>()).Where(c => c.GetComponent<Agent>().CanReproduce(ct));
+			float fertilityRate = GetFertilityRate(ct);
+			foreach (Agent potentialMother in reproducableFemales) 
+			{
+				float bd = potentialMother.GetBirthdate();
+				float age =  ct - bd;
+				int children = potentialMother.GetChildren().Count;
+				// Simple calculation re: potential for childbirth in this year
+				float baseChance = Mathf.Log(fertilityRate + 1.0f) / 30f;
+				// Multiply the chance by the difference between 
+				float childRatio = fertilityRate / ((float)children + fertilityRate);
+				baseChance *= childRatio;
+				float prob = Random.Range (0f, 1f);
+				if (prob < baseChance) {
+					Agent child = SpawnAgent(baseAgent);
+					potentialMother.AddChild(child);
+					child.SetMother(potentialMother);
+				}
+			}
 
 
 			// Life expectancy - USE VERY CRUDE APPROXIMATION FOR NOW
@@ -97,20 +111,18 @@ public class ParticleCity : MonoBehaviour
 			for (int i = 0; i < agents.Length; i++) 
 			{
 				Agent agent = agents[i].GetComponent<Agent>();
-				float age = agent.GetAge();
-				float thisAgentsLifeExpectancy = LifeExpectancyAtAge(gamestate.CurrentTimeInUnits(), agent.GetAge());
-				float prob = Random.Range (0, thisAgentsLifeExpectancy);
-				if (prob < 1.0f) {
+				float bd = agent.GetBirthdate();
+				float thisAgentsLifeExpectancy = LifeExpectancyAtAge(ct, ct - bd);
+				float prob = Random.Range (0f, thisAgentsLifeExpectancy * 2f);
+				if (prob < 1.0f)  {
 					deadAgents.Add(agents[i]);
 				}
 			}
 			foreach (GameObject deadAgent in deadAgents) {
-				Debug.Log ("Destroying " + deadAgent.name);
 				deadAgent.SetActive(false);
 			}
 
-
-			// To drip feed 
+			// To drip feed the changes by second
 			//			yield return new WaitForSeconds(1f);
 			yield return new WaitForSeconds((float)gamestate.timeSecondsPerUnit);
 		}
@@ -120,7 +132,7 @@ public class ParticleCity : MonoBehaviour
 
 	private float LifeExpectancyAtAge(float time, float age) 
 	{
-		float expectancy = LifeExpectancy(time);
+		float expectancy = LifeExpectancy(time) * 2f;
 		if (age > expectancy)
 			expectancy = age;
 		return expectancy - age;
@@ -134,24 +146,52 @@ public class ParticleCity : MonoBehaviour
 	private float LifeExpectancy(float time) {
 		float baseExpectancy = 0f;
 		if (time >= 1871 && time < 1900) {
-			baseExpectancy = 41.9882f * 2f;
+			baseExpectancy = 41.9882f;
 		}
 		else if (time >= 1900 && time < 1930) {
-			baseExpectancy = 57.8647f * 2f;
+			baseExpectancy = 57.8647f;
 		}
 		else if (time >= 1931 && time < 1960) {
-			baseExpectancy = 68.46f * 2f;
+			baseExpectancy = 68.46f;
 		}
 		else if (time >= 1871 && time < 1900) {
-			baseExpectancy = 72.84f * 2f;
+			baseExpectancy = 72.84f;
 		}
 		else if (time >= 1991) {
-			baseExpectancy = 79.93f * 2f;
+			baseExpectancy = 79.93f;
 		}
 		else {
-			baseExpectancy = 34.05f * 2f;
+			baseExpectancy = 34.05f;
 		}
 		return baseExpectancy;
+	}
+
+	/// <summary>
+	/// Provide very rough approximation to Australia's fertility rates, 1901 onwards
+	/// Taken from Gapminder data
+	/// </summary>
+	public float GetFertilityRate(float time) 
+	{
+		float fertilityRate = 0f;
+		if (time >= 1800 && time < 1850) {
+			fertilityRate = 41.9882f;
+		}
+		else if (time >= 1850 && time < 1880) {
+			fertilityRate = 5.6414f;
+		}
+		else if (time >= 1881 && time < 1910) {
+			fertilityRate = 4.0736f;
+		}
+		else if (time >= 1910 && time < 1940) {
+			fertilityRate = 2.95f;
+		}
+		else if (time >= 1940 && time < 1970) {
+			fertilityRate = 3.275f;
+		}
+		else {
+			fertilityRate = 1.902f;
+		}
+		return fertilityRate;
 	}
 
 	public void UpdateWorldDimensions() {
@@ -174,7 +214,7 @@ public class ParticleCity : MonoBehaviour
 		camera.transform.position = new Vector3(gamestate.originX, camera.transform.position.y, gamestate.originZ);
 	}
 
-	public void SpawnAgent(GameObject agent) {
+	public Agent SpawnAgent(GameObject agent) {
 		Grid grid = GameObject.Find ("GridOrigin").GetComponent<Grid>();
 		// Random x and z values
 		float x = gamestate.originX + Random.Range(-particleRange, particleRange);
@@ -196,9 +236,17 @@ public class ParticleCity : MonoBehaviour
 		newAgent.transform.position = position;
 		newAgent.transform.localScale = scale;
 		newAgent.name = "Agent " + (agents.Count);
+
 		Agent agentScript  = (Agent)newAgent.GetComponent("Agent");
 		agentScript.showNetwork = gameState.showNetwork;
+
+		float ct = gamestate.CurrentTimeInUnits ();
+		float lifeExpectancy = LifeExpectancy(ct);
+		float currentAge = Random.Range (0f, lifeExpectancy * 2f);
+		agentScript.SetBirthdate(ct - currentAge);
+
 		agents.Add(newAgent);
+		return agentScript;
 	}
 
 	public void ResizeAgents(int newSize) {

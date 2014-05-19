@@ -400,6 +400,7 @@ public class Grid : MonoBehaviour
 		bool buildBuildings = gameState.showBuildings;
 		if (buildBuildings) {
 			GameObject dynamicObjects = GameObject.Find("DynamicObjects");
+			GameObject baseBuilding = GameObject.Find("BaseBuilding");
 			float buildingsDimension = cellSize;
 			if (currentCells != null) 
 			{
@@ -419,7 +420,8 @@ public class Grid : MonoBehaviour
 
 						float r = UnityEngine.Random.Range(0, 100);
 						if (r < gameState.chanceOfBuilding && height > 1.0f) {
-							gameObject = GameObject.CreatePrimitive (PrimitiveType.Cube);
+							gameObject = (GameObject)Instantiate(baseBuilding);
+//							gameObject = GameObject.CreatePrimitive (PrimitiveType.Cube);
 							gameObject.name = ("Building at: (" + normalisedX + ", " + normalisedY + ", " + height + ")");
 							
 							// TODO: Use actual terrain height for y value

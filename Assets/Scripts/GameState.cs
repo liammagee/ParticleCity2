@@ -67,8 +67,10 @@ public class GameState : MonoBehaviour
 	private float currentTimeInUnits;
 	private bool changedTimeUnit;
 	private float lastRecordedTime;
+	private bool initiated = false;
 
 	public void Start() {
+		initiated = false;
 		if (numAgents == 0)
 			numAgents = 10;
 		if (speedAgents == 0)
@@ -94,6 +96,7 @@ public class GameState : MonoBehaviour
 		lastTimeInUnits = currentTimeInUnits;
 		changedTimeUnit = false;
 		lastRecordedTime = Time.time;
+		initiated = true;
 	}
 	
 	public bool ChangeInTime() 
@@ -103,6 +106,8 @@ public class GameState : MonoBehaviour
 	
 	public float CurrentTimeInUnits() 
 	{
+		if (!initiated)
+			InitiateClock ();
 		return currentTimeInUnits;
 	}
 	
