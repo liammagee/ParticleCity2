@@ -408,7 +408,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 163208304}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: .332038879, y: 0, z: 0}
+  m_LocalPosition: {x: .33203125, y: -1.6875, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1548463373}
@@ -447,7 +447,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 60e3359ffaefe124a992e17c8830875c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  anchorStyle: 13
+  anchorStyle: 14
   isEnabled: 1
   isVisible: 1
   isInteractive: 1
@@ -467,12 +467,12 @@ MonoBehaviour:
   tabIndex: -1
   canFocus: 0
   layout:
-    anchorStyle: 13
+    anchorStyle: 14
     margins:
-      left: .00390625
-      top: -0
-      right: -.00390625
-      bottom: 648
+      left: 0
+      top: 648
+      right: 0
+      bottom: 0
     owner: {fileID: 163208308}
   renderOrder: 4
   isLocalized: 0
@@ -2466,7 +2466,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 908531999}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: .332038879, y: -1.984375, z: 0}
+  m_LocalPosition: {x: .33203125, y: -.278645843, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1548463373}
@@ -2480,8 +2480,8 @@ BoxCollider:
   m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_Size: {x: .6640625, y: .377604187, z: .00100000005}
-  m_Center: {x: 0, y: .188802093, z: 0}
+  m_Size: {x: .6640625, y: .278645843, z: .00100000005}
+  m_Center: {x: 0, y: .139322922, z: 0}
 --- !u!114 &908532002
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2493,7 +2493,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 60e3359ffaefe124a992e17c8830875c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  anchorStyle: 14
+  anchorStyle: 13
   isEnabled: 1
   isVisible: 1
   isInteractive: 1
@@ -2506,19 +2506,19 @@ MonoBehaviour:
   disabledColor:
     serializedVersion: 2
     rgba: 4294967295
-  size: {x: 255, y: 145}
+  size: {x: 255, y: 107}
   minSize: {x: 0, y: 0}
   maxSize: {x: 0, y: 0}
   clipChildren: 0
   tabIndex: -1
   canFocus: 0
   layout:
-    anchorStyle: 14
+    anchorStyle: 13
     margins:
-      left: .00390625
-      top: 617
-      right: -.00390625
-      bottom: 0
+      left: 0
+      top: .00390625
+      right: 0
+      bottom: 654.996094
     owner: {fileID: 908532002}
   renderOrder: 5
   isLocalized: 0
@@ -5291,7 +5291,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 1987736458}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: .00130208337, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1344735681}
