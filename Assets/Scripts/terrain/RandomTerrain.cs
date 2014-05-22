@@ -6,22 +6,22 @@ using LibNoise.Unity.Operator;
 using System.IO;
 using System;
 using UnityEngine;
+using UnityEditor;
 
 public enum NoiseTypeGenerator {Perlin, Billow, RiggedMultifractal, Voronoi, Mix};
 
 public class RandomTerrain : MonoBehaviour {
-    private Noise2D m_noiseMap = null;
-    private Texture2D[] m_textures = new Texture2D[3];
-    public int resolution = 64; 
-    public NoiseTypeGenerator noise = NoiseTypeGenerator.Perlin;
-    public float zoom = 1f; 
-    public float offset = 0f;
-    
-    public void Start() {
-    }
-    
 
-    public void Generate() {	
+    [MenuItem("Terrain/Random Terrain")]
+    public static void Generate() {	
+        Noise2D m_noiseMap = null;
+        Texture2D[] m_textures = new Texture2D[3];
+        int resolution = 64; 
+        NoiseTypeGenerator noise = NoiseTypeGenerator.Perlin;
+        float zoom = 1f; 
+        float offset = 0f;
+
+
         resolution = Terrain.activeTerrain.terrainData.alphamapHeight;
 
         // Create the module network
@@ -52,17 +52,17 @@ public class RandomTerrain : MonoBehaviour {
         }
          
         // Initialize the noise map
-        this.m_noiseMap = new Noise2D(resolution, resolution, moduleBase);
+        m_noiseMap = new Noise2D(resolution, resolution, moduleBase);
         double left = offset + UnityEngine.Random.Range(-1f, 0f) * 1/zoom;
         double right = offset + UnityEngine.Random.Range(0f, 1f) * 1/zoom;
         double top = offset + UnityEngine.Random.Range(-1f, 0f) * 1/zoom;
         double bottom = offset + UnityEngine.Random.Range(0f, 1f) * 1/zoom;
-        this.m_noiseMap.GeneratePlanar(left, right, top, bottom);
+        m_noiseMap.GeneratePlanar(left, right, top, bottom);
         
 
 
         TerrainData terrainData = Terrain.activeTerrain.terrainData;
-        terrainData.SetHeights(0, 0, this.m_noiseMap.GetData(0.1f));
+        terrainData.SetHeights(0, 0, m_noiseMap.GetData(0.1f));
 
     }
 }

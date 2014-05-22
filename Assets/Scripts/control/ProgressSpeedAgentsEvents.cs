@@ -14,12 +14,11 @@ public class ProgressSpeedAgentsEvents : MonoBehaviour
 
 	public void OnValueChanged( dfControl control, float value )
 	{
+		gamestate.speedAgents = (int)(value / 3f);
+		gamestate.AdjustTimeScale((int)(100 / value));
 		foreach (GameObject gameObject in GameObject.FindGameObjectsWithTag("Agent")) {
 			Agent agentScript  = (Agent)gameObject.GetComponent("Agent");
-			agentScript.particleSpeed = value;
 			agentScript.CalculateSpeed();
 		}
-		gamestate.speedAgents = (int)value;
-		gamestate.AdjustTimeScale((int)(100 / value));
 	}
 }

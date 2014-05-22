@@ -21,7 +21,6 @@ public class ReverseTerrain : MonoBehaviour
 			}
 		}
 		terrainData.SetHeights(0, 0, newHeights);
-		Debug.Log("Hello new terrain");
 	}
 
 	[MenuItem("Terrain/Clear Terrain")]
@@ -34,6 +33,7 @@ public class ReverseTerrain : MonoBehaviour
 		float[,] newHeights = new float[width, height];
 		for (int x = 0; x < width ; x++) {
 			for (int y = 0; y < height ; y++) {
+				// Set 1m above sea level
 				newHeights[x, y] = 0.0f;
 			}
 		}
@@ -51,7 +51,6 @@ public class ReverseTerrain : MonoBehaviour
      }
    }
     terrainData.SetAlphamaps(0, 0, splatmapData);
-		Debug.Log("Hello new terrain");
 	}
 
 	[MenuItem("Terrain/Splatmap")]
@@ -107,13 +106,13 @@ public class ReverseTerrain : MonoBehaviour
 					splatWeights[2] = 1.0f;
 					splatWeights[3] = 0f;
 				}
-				else if (height < 20.0f) {
+				else if (height < 30.0f) {
 					splatWeights[0] = 1.0f;
 					splatWeights[1] = 0f;
 					splatWeights[2] = 0f;
 					splatWeights[3] = 0f;
 				}
-				else if (height < 50.0f) {
+				else if (height < 100.0f) {
 					splatWeights[0] = 0f;
 					splatWeights[1] = 1.0f;
 					splatWeights[2] = 0f;
@@ -144,7 +143,6 @@ public class ReverseTerrain : MonoBehaviour
       
         // Finally assign the new splatmap to the terrainData:
         terrainData.SetAlphamaps(0, 0, splatmapData);
-		Debug.Log("Hello new splat maps");
 	}
 }
 

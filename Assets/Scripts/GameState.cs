@@ -56,8 +56,9 @@ public class GameState : MonoBehaviour
 	public bool using3d = false;
 	public bool showNetwork = false;
 	public bool showBuildings;
-	public bool showUpdatedTerrain;
 	public bool showGrid;
+	public bool showTerrain;
+	public bool showUpdatedTerrain;
 
 	// Time variables
 	public int timeOrigin;

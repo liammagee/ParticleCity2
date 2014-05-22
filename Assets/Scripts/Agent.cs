@@ -10,7 +10,6 @@ public class Agent : MonoBehaviour
 {
 
 	/// Public variables
-	public float particleSpeed;
 	public bool using3d;
 	public bool showNetwork;
 
@@ -49,13 +48,12 @@ public class Agent : MonoBehaviour
 	private Vector3[] verts;
 	private Vector2[] uvs;
 	private int[] tris;
-	public float gravity = 20.0F;
+	public float gravity = 100.0F;
 
 	public void Start() {
 		friends = new ArrayList();
 		dummies = new ArrayList();
 		children = new List<Agent> ();
-		particleSpeed = 1.0f;
 		particleCalibrate = 0.1f;
 		
 		c1 = Color.green;
@@ -119,16 +117,17 @@ public class Agent : MonoBehaviour
 
 	public void SetBirthdate(float bd) {
 		birthdate = bd;
-		Debug.Log ("Details: ");
-		Debug.Log (birthdate);
 	}
 
 
 	public void CalculateSpeed() {
+		float particleSpeed = gameState.speedAgents;
 		float dirX = (Random.Range(-1.0f, 1.0f) * particleSpeed);
 		float dirY = 0;
 		if (gameState.using3d)
 			dirY = (Random.Range(-1.0f, 1.0f) * particleSpeed);
+		else
+			dirY = -gravity * Time.deltaTime;
 		float dirZ = (Random.Range(-1.0f, 1.0f) * particleSpeed);
 		currentDirection = new Vector3(dirX, dirY, dirZ);
 	}
@@ -157,19 +156,34 @@ public class Agent : MonoBehaviour
 		    return;
 
 		CharacterController controller = gameObject.GetComponent<CharacterController>();
-		Vector3 currentCalibration = new Vector3(0, 0, 0);
-		currentCalibration.x += (Random.Range(-1.0f, 1.0f) * particleCalibrate);
-		if (gameState.using3d)
-			currentCalibration.y += (Random.Range(-1.0f, 1.0f) * particleCalibrate);
-		else if (! controller.isGrounded)
-			currentCalibration.y -= gravity * Time.deltaTime;
-			// currentCalibration.y = 0; //(Random.Range(-1.0f, 1.0f));
-		currentCalibration.z += (Random.Range(-1.0f, 1.0f) * particleCalibrate);
+//		Vector3 currentCalibration = new Vector3(0, 0, 0);
+//		currentCalibration.x += (Random.Range(-1.0f, 1.0f) * particleCalibrate);
+//		if (gameState.using3d)
+//			currentCalibration.y += (Random.Range(-1.0f, 1.0f) * particleCalibrate);
+//		else
+//			currentCalibration.y = 0;
+//		currentCalibration.z += (Random.Range(-1.0f, 1.0f) * particleCalibrate);
+//		currentDirection += currentCalibration;
+
+		if (! controller.isGrounded)
+			currentDirection.y = - gravity * Time.deltaTime;
+
+
+		//Check if next step is into water
+		float nextX = controller.transform.position.x + currentDirection.x;
+		float nextY = controller.transform.position.z + currentDirection.z;
+		TerrainData terrainData = grid.GetTerrain().terrainData; //Terrain.activeTerrain.terrainData;
+		float terrainX = gameObject.transform.position.x + terrainData.size.x / 2f;
+		float terrainY = gameObject.transform.position.z + terrainData.size.z / 2f;
+		float height = terrainData.GetHeight((int)grid.GetHeightmapX((int)terrainX) , (int)grid.GetHeightmapY((int)terrainY));
 		
-		currentDirection += currentCalibration;
+		if (height < 1.0f) {
+			currentDirection = new Vector3(-currentDirection.x, currentDirection.y, -currentDirection.z);
+		}
+
 		// NOTE: Much faster than SimpleMove
-		controller.Move(currentDirection * Time.deltaTime);
-		
+//		controller.Move(currentDirection * Time.deltaTime);
+		controller.SimpleMove(currentDirection);
 		
 		for (int j = 0; j < dummies.Count; j++) {
 			GameObject dummyObj = (GameObject)dummies[j];
@@ -297,34 +311,39 @@ public class Agent : MonoBehaviour
   void OnControllerColliderHit(ControllerColliderHit hit) {
   	GameState gameState = GameObject.Find("Main Camera").GetComponent<GameState>();
   	Grid grid = GameObject.Find("GridOrigin").GetComponent<Grid>();
+		// Process border collision
 		if (hit.collider.gameObject.name.Equals("Terrain")) {
-			
-	  	TerrainData terrainData = Terrain.activeTerrain.terrainData;
-	  	float terrainX = gameObject.transform.position.x + terrainData.size.x / 2f;
-	  	float terrainY = gameObject.transform.position.z + terrainData.size.z / 2f;
-	  	float height = terrainData.GetHeight((int)grid.GetHeightmapX((int)terrainX) , (int)grid.GetHeightmapY((int)terrainY));
-	  	float steepness = terrainData.GetSteepness((int)grid.GetHeightmapX((int)terrainX) , (int)grid.GetHeightmapY((int)terrainY));
+		  	TerrainData terrainData = grid.GetTerrain().terrainData; //Terrain.activeTerrain.terrainData;
+		  	float terrainX = gameObject.transform.position.x + terrainData.size.x / 2f;
+		  	float terrainY = gameObject.transform.position.z + terrainData.size.z / 2f;
+		  	float height = terrainData.GetHeight((int)grid.GetHeightmapX((int)terrainX) , (int)grid.GetHeightmapY((int)terrainY));
+		  	float steepness = terrainData.GetSteepness((int)grid.GetHeightmapX((int)terrainX) , (int)grid.GetHeightmapY((int)terrainY));
 
-	  	// Over correction
-	  	if ((gameObject.transform.position.y < 2f || height < 1f)) {
-	  		/*
-	  		if (HasDroppedAltitude())
-	  			currentDirection /= 4f;
-  			if (HasRaisedAltitude())
-  				currentDirection *= 4f;
-  				*/
-	  		// Debug.Log("Ever get here?");
-	  		// currentDirection.x = -currentDirection.x;
-		  	// currentDirection.z = -currentDirection.z;
-	  	}
-	  	lastPosition = gameObject.transform.position;
+		  	// Over correction
+		  	if ((gameObject.transform.position.y < 2f || height < 1f)) {
+		  		/*
+		  		if (HasDroppedAltitude())
+		  			currentDirection /= 4f;
+	  			if (HasRaisedAltitude())
+	  				currentDirection *= 4f;
+	  				*/
+		  		// Debug.Log("Ever get here?");
+		  		// currentDirection.x = -currentDirection.x;
+			  	// currentDirection.z = -currentDirection.z;
+		  	}
+	  		lastPosition = gameObject.transform.position;
 		}
+
 		if (hit.collider.gameObject.name.Equals("CubeBottomBorder") || hit.collider.gameObject.name.Equals("CubeTopBorder")) {
 			currentDirection.z = -currentDirection.z;
 		}
-		else if (hit.collider.gameObject.name.Equals("CubeLeftBorder") || hit.collider.gameObject.name.Equals("CubeRightBorder")) {
-			currentDirection.x = -currentDirection.x;
-		}
+        if (hit.collider.gameObject.name.Equals("CubeLeftBorder") || hit.collider.gameObject.name.Equals("CubeRightBorder")) {
+            currentDirection.x = -currentDirection.x;
+        }
+        if (hit.collider.gameObject.name.Equals("CubeUpBorder") || hit.collider.gameObject.name.Equals("CubeDownBorder")) {
+            currentDirection.x = -currentDirection.x;
+        }
+
 		if (gameState.showNetwork && hit.collider.gameObject.CompareTag("Agent")) {
 			if (hit.collider.gameObject != null) {
 				if (friends == null)

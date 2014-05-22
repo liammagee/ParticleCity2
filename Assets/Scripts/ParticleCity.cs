@@ -11,7 +11,7 @@ public class ParticleCity : MonoBehaviour
 
 	int agentNumber;
 	public float particleScale;
-	float particleRange;
+	float boundarySize;
 
 	ArrayList agents;
 
@@ -22,26 +22,24 @@ public class ParticleCity : MonoBehaviour
 	public GameState gamestate;
 
 
-	public void Start () {
+	public void Start () 
+    {
 		if (gamestate == null)
 			gamestate = GameObject.Find("Main Camera").GetComponent<GameState>();
 		agentNumber = gamestate.numAgents;
 
-
-		particleRange = 10f;
-
 		Init();
 	}
 
-	public void Init() {
-
+	public void Init() 
+    {
 		agents = new ArrayList(agentNumber);
 
 		// Do the borders conservatively
 		BorderControl borderControl = GameObject.Find("Border").GetComponent<BorderControl>();
-		int boundarySize = gamestate.boundarySize;
+		boundarySize = gamestate.boundarySize;
 		if (boundarySize == 0)
-			boundarySize = 25;
+			boundarySize = 50;
 		borderControl.RedoBorders(boundarySize);
 
 		// Update the dimensions
@@ -113,7 +111,7 @@ public class ParticleCity : MonoBehaviour
 				Agent agent = agents[i].GetComponent<Agent>();
 				float bd = agent.GetBirthdate();
 				float thisAgentsLifeExpectancy = LifeExpectancyAtAge(ct, ct - bd);
-				float prob = Random.Range (0f, thisAgentsLifeExpectancy * 2f);
+				float prob = Random.Range (0f, thisAgentsLifeExpectancy);
 				if (prob < 1.0f)  {
 					deadAgents.Add(agents[i]);
 				}
@@ -203,11 +201,13 @@ public class ParticleCity : MonoBehaviour
 		}
 		
 		// Adjust the baseAgent
-		TerrainData terrainData = Terrain.activeTerrain.terrainData;
-		float height = terrainData.GetHeight((int)gamestate.originX, (int)gamestate.originZ) + 6.0f;
-
+		Grid grid = GameObject.Find ("GridOrigin").GetComponent<Grid>();
+		Terrain terrain = grid.GetTerrain();
 		GameObject baseAgent = GameObject.Find("BaseAgent");
-		baseAgent.transform.position = new Vector3(gamestate.originX, height, gamestate.originZ);
+        Vector3 position = new Vector3(gamestate.originX, 0, gamestate.originZ);
+        float height = terrain.SampleHeight(position);
+        position.y = height + 1.0f;
+        baseAgent.transform.position = position;
 
 		// Adjust the camera
 		GameObject camera = GameObject.Find ("Main Camera");
@@ -216,16 +216,24 @@ public class ParticleCity : MonoBehaviour
 
 	public Agent SpawnAgent(GameObject agent) {
 		Grid grid = GameObject.Find ("GridOrigin").GetComponent<Grid>();
+
 		// Random x and z values
-		float x = gamestate.originX + Random.Range(-particleRange, particleRange);
-		float z = gamestate.originZ + Random.Range(-particleRange, particleRange);
+        Terrain terrain = grid.GetTerrain();
+		TerrainData terrainData = terrain.terrainData; 
+		Vector3 terrainSize = terrainData.size;
+		float terrainX = (terrainSize.x / 2f);
+		float terrainZ = (terrainSize.z / 2f);
+		float adjustPercent = boundarySize / 100f;
+
+		float x = gamestate.originX + Random.Range(-terrainX * adjustPercent, terrainX * adjustPercent);
+		float z = gamestate.originZ + Random.Range(-terrainZ * adjustPercent, terrainZ * adjustPercent);
 
 		// Get the y value (approx) of the current position
-		TerrainData terrainData = Terrain.activeTerrain.terrainData;
-		float height = terrainData.GetHeight((int)(grid.GetHeightmapX( (int)(x + terrainData.size.x))), (int)(grid.GetHeightmapY( (int)(z + terrainData.size.z)))) + 6.0f;
+        Vector3 position = new Vector3(x, 0, z);
+		float height = terrain.SampleHeight(position);
+        position.y = height + 1.0f;
 
 		// Set the position and scale
-		Vector3 position = new Vector3(x, height, z);
 		Vector3 scale = new Vector3(particleScale, particleScale, particleScale);
 
 		// Instantiate the new agent

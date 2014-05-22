@@ -6,9 +6,9 @@ PhysicMaterial:
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
   m_Name: WallMaterial
-  dynamicFriction: 0
-  staticFriction: 0
-  bounciness: .75
+  dynamicFriction: .5
+  staticFriction: .5
+  bounciness: 0
   frictionCombine: 0
   bounceCombine: 1
   frictionDirection2: {x: 0, y: 0, z: 0}

@@ -13,15 +13,15 @@ public class ListboxView : MonoBehaviour
 		orbit.enabled = false;
 		switch(value) {
 			case 0:
-				camera.transform.position = new Vector3(gamestate.originX, 590f, gamestate.originZ);
+				camera.transform.position = new Vector3(gamestate.originX, 500f, gamestate.originZ);
 				camera.transform.rotation = Quaternion.Euler(90f, 180f, 0f);
 				break;
 			case 1:
-				camera.transform.position = new Vector3(0f, 350f, -300f);
+                camera.transform.position = new Vector3(0f, 500f, -500 - gamestate.originZ);
 				camera.transform.rotation = Quaternion.Euler(45f, 180f, 0f);
 				break;
 			case 2:
-				camera.transform.position = new Vector3(-350f, 350f, -350f);
+            camera.transform.position = new Vector3(- gamestate.originZ, 500f, -500 - gamestate.originZ);
 				camera.transform.rotation = Quaternion.Euler(30f, 225f, 0f);
 				break;
 			case 3:
