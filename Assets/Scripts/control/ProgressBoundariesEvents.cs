@@ -15,7 +15,7 @@ public class ProgressBoundariesEvents : MonoBehaviour
 	{
 		GameState gamestate = GameObject.Find("Main Camera").GetComponent<GameState>();
 		gamestate.boundarySize = (int)value;
-		BorderControl borderControl = GameObject.Find("BorderCube").GetComponent<BorderControl>();
+		BorderControl borderControl = GameObject.Find("Border").GetComponent<BorderControl>();
 		borderControl.RedoBorders(value);
 	}
 }

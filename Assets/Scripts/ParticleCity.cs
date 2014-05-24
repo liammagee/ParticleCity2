@@ -193,12 +193,6 @@ public class ParticleCity : MonoBehaviour
 	}
 
 	public void UpdateWorldDimensions() {
-		// Adjust the walls
-		GameObject[] walls = GameObject.FindGameObjectsWithTag("Wall");
-		foreach (GameObject wall in walls) 
-		{
-			wall.transform.position += new Vector3(gamestate.originX, 0, gamestate.originZ);
-		}
 		
 		// Adjust the baseAgent
 		Grid grid = GameObject.Find ("GridOrigin").GetComponent<Grid>();

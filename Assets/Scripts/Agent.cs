@@ -260,8 +260,8 @@ public class Agent : MonoBehaviour
 					if (lineRenderer == null)
 						lineRenderer = (LineRenderer)dummy.AddComponent("LineRenderer");
 					lineRenderer.material.color = Color.green;
-					// lineRenderer.SetColors(c1, c2);
-					lineRenderer.SetWidth(0.5f,0.5f);
+//                        lineRenderer.SetColors(Color.green, Color.green);
+					lineRenderer.SetWidth(1f,1f);
 
 					// Do positions
 					lineRenderer.SetPosition(0, gameObject.transform.position);
@@ -335,13 +335,13 @@ public class Agent : MonoBehaviour
 		}
 
 		if (hit.collider.gameObject.name.Equals("CubeBottomBorder") || hit.collider.gameObject.name.Equals("CubeTopBorder")) {
-			currentDirection.z = -currentDirection.z;
+            currentDirection.z = -currentDirection.z;
 		}
         if (hit.collider.gameObject.name.Equals("CubeLeftBorder") || hit.collider.gameObject.name.Equals("CubeRightBorder")) {
             currentDirection.x = -currentDirection.x;
         }
         if (hit.collider.gameObject.name.Equals("CubeUpBorder") || hit.collider.gameObject.name.Equals("CubeDownBorder")) {
-            currentDirection.x = -currentDirection.x;
+            currentDirection.y = -currentDirection.y;
         }
 
 		if (gameState.showNetwork && hit.collider.gameObject.CompareTag("Agent")) {
@@ -390,7 +390,7 @@ public class Agent : MonoBehaviour
 
 	public void ResetZAxis() {
 		Vector3 pos = gameObject.transform.position;
-		pos.z = 0;
+		pos.y = 0;
 		gameObject.transform.position = pos;
 	}
 }

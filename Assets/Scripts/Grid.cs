@@ -31,10 +31,11 @@ public class Grid : MonoBehaviour
 	float alphamapWidthRatio = 0.0f;
 	float alphamapHeightRatio = 0.0f;
 
-	private Dictionary<Vector2, int> gridCells;
-	private Dictionary<Vector2, int> currentCells;
-	private Dictionary<Vector2, GameObject> buildings;
-	private GameState gameState;
+    private List<Vector2> currentCells;
+    private Dictionary<Vector2, Patch> patches;
+    private Dictionary<Vector2, Building> buildings;
+
+    private GameState gameState;
 	private GameObject terrainMesh;
 	private Mesh cursorMesh;
 
@@ -69,52 +70,33 @@ public class Grid : MonoBehaviour
 	
 	void LoadHeightmapData(string heighmapFile)
 	{
-
 		float []heights = GetHeights();
 		using (System.IO.FileStream f = System.IO.File.OpenRead(heighmapFile)) {
-			
 			using (System.IO.BinaryReader br = new System.IO.BinaryReader(f)) {
 				
 				int res = Mathf.CeilToInt (Mathf.Sqrt (f.Length / 2));
-				
 				terrainData.heightmapResolution = res + 1;
-				
 				terrainData.size = new Vector3 (res * 2, res / 10, res * 2);
-				
 				terrainData.baseMapResolution = res;
-				
 				terrainData.SetDetailResolution (res, 8);
-				
 				float[,] heightData = new float[res,res];
-
 				int x, y;
 				for (x=0; x<res; x++) {
-					
 					for (y=0; y<res; y++) {
-						
 						heightData [x, y] = heights[br.ReadUInt16()];
-						
 					}
-					
 				}
 				
 				for(x=res; x<res+1;x++){
-					
 					for (y=0; y<res; y++) 
-						
 						heightData [x, y] = heightData [x-1, y];
-					
 				}
 				
 				for(x=0; x<res;x++){
-					
 					for (y=res; y<res+1; y++) 
-						
 						heightData [x, y] = heightData [x, y-1];
-					
 				}
 				terrainData.SetHeights (0, 0, heightData);
-				
 			}
 		}
 	}
@@ -149,9 +131,9 @@ public class Grid : MonoBehaviour
 		terrainSize = terrainData.size;
 		origin = terrain.transform.position;
   
-		gridCells = new Dictionary<Vector2, int> ();
-		currentCells = new Dictionary<Vector2, int> ();
-		buildings = new Dictionary<Vector2, GameObject> ();
+        currentCells = new List<Vector2> ();
+        patches = new Dictionary<Vector2, Patch> ();
+		buildings = new Dictionary<Vector2, Building> ();
 
 		gameState = GameObject.Find ("Main Camera").GetComponent<GameState> ();
 
@@ -190,8 +172,10 @@ public class Grid : MonoBehaviour
 		ShowStats ();
 		ConstructMesh();
 
-		// Kick off coroutine
-		StartCoroutine("PeriodicUpdate");
+		// Kick off coroutines
+        StartCoroutine("PeriodicUpdate");
+        StartCoroutine("IntervalUpdate");
+
 	}
 
 
@@ -295,19 +279,42 @@ public class Grid : MonoBehaviour
 
 	}
 
-	/// <summary>
-	/// For performance, update the terrain and buildings periodically
-	/// </summary>
-	IEnumerator PeriodicUpdate() 
-	{
-		for (;;) 
-		{
-			PaintTerrain ();
-			PaintBuildings ();
-			ClearCurrentCells();
-			yield return new WaitForSeconds(0.1f);
-		}
-	}
+    /// <summary>
+    /// For performance, update the terrain and buildings periodically
+    /// </summary>
+    IEnumerator PeriodicUpdate() 
+    {
+        for (;;) 
+        {
+            PaintTerrain ();
+            PaintBuildings ();
+            ClearCurrentCells();
+            yield return new WaitForSeconds(0.1f);
+        }
+    }
+    
+    /// <summary>
+    /// Recuperate patches and run down buildings at intervals
+    /// </summary>
+    IEnumerator IntervalUpdate() 
+    {
+        for (;;) 
+        {
+            foreach(KeyValuePair<Vector2, Patch> entry in patches) 
+            {
+                Patch patch = entry.Value;
+                patch.recuperate();
+            }
+            foreach(KeyValuePair<Vector2, Building> entry in buildings) 
+            {
+                Building building = entry.Value;
+                building.disintegrate();
+            }
+            yield return new WaitForSeconds(gameState.timeSecondsPerUnit);
+        }
+    }
+    
+
 
 
 	void Update ()
@@ -317,7 +324,7 @@ public class Grid : MonoBehaviour
 
 	void ClearCurrentCells() 
 	{
-		currentCells = new Dictionary<Vector2, int> ();
+        currentCells.Clear();
 	}
 
 
@@ -423,12 +430,6 @@ public class Grid : MonoBehaviour
 
 	void BuildGrid ()
 	{  
-		ShowGrid ();    
-	}
-
-
-	void ShowGrid ()
-	{  
 		Color c1 = Color.green;
 		Color c2 = Color.green;
 		float xFactor = heightmapWidth / widthOfTerrain;
@@ -449,7 +450,7 @@ public class Grid : MonoBehaviour
 			lineRenderer.SetWidth (0.5f, 0.5f);
 
 			List<Vector3> points = new List<Vector3> ();
-
+            
 
 			for (int y = 0; y <= heightOfTerrain; y ++) {
 				float height = terrainData.GetHeight ((int)(x * xFactor), (int)(y * yFactor)) + 1.0f;
@@ -460,6 +461,10 @@ public class Grid : MonoBehaviour
 					Vector3 point = new Vector3 (newX, height, newZ);
 					points.Add (point);
 				}
+
+                // Add a new Patch while here
+                Vector2 position = new Vector2(x, y);
+                patches.Add (position, new Patch(position));
 			}
 			lineRenderer.SetVertexCount (points.Count);
 			for (int i = 0; i < points.Count; i++) {
@@ -493,92 +498,127 @@ public class Grid : MonoBehaviour
 				lineRenderer.SetPosition (i, points [i]);
 			}
 		}
-
-		// Mesh version - WORK IN PROGRESS
-		/*
-		Type[] terrainMeshTypes = new Type[2];
-		int sampleFactor = Mathf.FloorToInt (widthOfTerrain / 128f);
-		int terrainCellSize = Mathf.FloorToInt(128);
-		terrainMeshTypes[0] = typeof(MeshFilter);
-		terrainMeshTypes[1] = typeof(MeshRenderer);
-		terrainMesh = new GameObject("TerrainMesh", terrainMeshTypes);
-		terrainMesh.transform.position = new Vector3(-Mathf.FloorToInt(widthOfTerrain / 2f), -indicatorOffsetY, -Mathf.FloorToInt(widthOfTerrain / 2f));
-		terrainMesh.transform.localScale = new Vector3(widthOfTerrain / 128f, 1, widthOfTerrain / 128f);
-//		terrainMesh.transform.parent = gameObject.transform;
-		MeshFilter filter = (MeshFilter)terrainMesh.GetComponent<MeshFilter>();
-		MeshRenderer r = terrainMesh.GetComponent<MeshRenderer>();
-		r.material.color = Color.red;
-		Mesh m = new Mesh ();
-		filter.mesh = m;
-		m.name = terrainMesh.name + "Mesh";
-		m.Clear();
-
-
-		Vector3[] verts = new Vector3[(int)terrainCellSize * (int)terrainCellSize];
-		Vector2[] uvs = new Vector2[(int)terrainCellSize * (int)terrainCellSize];
-		int[] tris = new int[ ((int)terrainCellSize - 1) * 2 * ((int)terrainCellSize - 1) * 3];
-		
-		float uvStep = 1.0f / 8.0f;
-		
-		int index = 0;
-		int triIndex = 0;
-		
-		for ( int z = 0; z < terrainCellSize; z ++ )
-		{
-			for ( int x = 0; x < terrainCellSize; x ++ )
-			{
-				verts[ index ] = new Vector3( x * sampleFactor, 0, z * sampleFactor );
-				uvs[ index ] = new Vector2( ((float)x * sampleFactor) * uvStep, ((float)z * sampleFactor) * uvStep );
-				
-				if ( x < terrainCellSize - 1 && z < terrainCellSize - 1 )
-				{
-					tris[ triIndex + 0 ] = index + 0;
-					tris[ triIndex + 1 ] = index + terrainCellSize;
-					tris[ triIndex + 2 ] = index + 1;
-					
-					tris[ triIndex + 3 ] = index + 1;
-					tris[ triIndex + 4 ] = index + terrainCellSize;
-					tris[ triIndex + 5 ] = index + terrainCellSize + 1;
-					
-					triIndex += 6;
-				}
-				
-				index ++;
-			}
-		}
-
-		// - Build Mesh -
-		m.vertices = verts;
-		m.uv = uvs;
-		m.triangles = tris;
-		
-		m.RecalculateBounds();
-		m.RecalculateNormals();
-
-		Vector3 heightmapPos = GetHeightmapPosition (Vector3.zero);
-		Vector3[,] mapGrid = CalculateGrid (heightmapPos, terrainCellSize, terrainCellSize, sampleFactor);
-		UpdateMesh (mapGrid, m);
-		*/
 	}
+
+    void PaintGrid()
+    {
+        GameObject dynamicObjects = GameObject.Find ("DynamicObjects");
+        GameObject visibleGrid = new GameObject ("VisibleGrid");
+        visibleGrid.transform.parent = dynamicObjects.transform;
+        CheckboxShowGrid.visibleGrid = visibleGrid;
+        visibleGrid.SetActive (false);
+
+        int dimension = 128;
+        int vertexLength = Mathf.FloorToInt (widthOfTerrain / (float)dimension);
+
+        Vector3 position = new Vector3(-Mathf.FloorToInt(widthOfTerrain / 2f), -indicatorOffsetY, -Mathf.FloorToInt(widthOfTerrain / 2f));
+        GameObject meshObject = CreateMeshObject("TerrainMesh", vertexLength, position);
+        meshObject.transform.parent = visibleGrid.transform;
+        Mesh m = (meshObject.GetComponent<MeshFilter>()).mesh;
+
+        Vector3[] verts = new Vector3[dimension * dimension];
+        Vector2[] uvs = new Vector2[dimension * dimension];
+        int[] tris = new int[ (dimension) * 2 * (dimension) * 3];
+    
+        float uvStep = 1.0f / 4.0f;
+        
+        int index = 0;
+        int triIndex = 0;
+        for ( int z = 0; z < (dimension) ; z += 1)
+        {
+            for ( int x = 0; x < dimension  ; x += 2 )
+            {
+                verts[ index ] = new Vector3(x * vertexLength - 0.5f, 0, z * vertexLength - 0.5f);
+                verts[ index + 1 ] = new Vector3(x * vertexLength + 0.5f, 0, z * vertexLength + 0.5f);
+                uvs[ index ] = new Vector2( ((float)x * vertexLength) * uvStep - 0.5f, ((float)z * vertexLength) * uvStep - 0.5f );
+                uvs[ index + 1 ] = new Vector2( ((float)x * vertexLength) * uvStep + 0.5f, ((float)z * vertexLength) * uvStep + 0.5f );
+
+                if (x < dimension && z < dimension ) 
+                {
+                    tris[ triIndex + 0 ] = index + 0;
+                    tris[ triIndex + 1 ] = index + 1;
+                    tris[ triIndex + 2 ] = index + 2;
+                    
+                    tris[ triIndex + 3 ] = index + 1;
+                    tris[ triIndex + 4 ] = index + 3;
+                    tris[ triIndex + 5 ] = index + 2;
+                    
+                    tris[ triIndex + 6 ] = index + 0;
+                    tris[ triIndex + 7 ] = index + (dimension);
+                    tris[ triIndex + 8 ] = index + 1;
+                    
+                    tris[ triIndex + 9 ] = index + 1;
+                    tris[ triIndex + 10 ] = index + (dimension);
+                    tris[ triIndex + 11 ] = index + (dimension) + 1;
+                }   
+                    triIndex += 12;
+
+                index += 2;
+            }
+        }
+        
+        // - Build Mesh -
+        m.vertices = verts;
+        m.uv = uvs;
+        m.triangles = tris;
+        
+        m.RecalculateBounds();
+        m.RecalculateNormals();
+        
+        Vector3 heightmapPos = GetHeightmapPosition (Vector3.zero);
+        Vector3[,] mapGrid = CalculateGrid (heightmapPos, dimension, dimension, vertexLength);
+
+        //UpdateMesh (mapGrid, m);
+    }
+
+    void PaintNetwork()
+    {
+        
+    }
+
+
+
+    GameObject CreateMeshObject(string name, int vertexLength, Vector3 position)
+    {
+        Type[] meshTypes = new Type[2];
+        meshTypes[0] = typeof(MeshFilter);
+        meshTypes[1] = typeof(MeshRenderer);
+
+        GameObject meshObject = new GameObject(name, meshTypes);
+        meshObject.transform.position = position;
+//        meshObject.transform.localScale = new Vector3(vertexLength, 1, vertexLength);
+        meshObject.transform.localScale = new Vector3(1, 1, 1);
+
+        MeshFilter filter = (MeshFilter)meshObject.GetComponent<MeshFilter>();
+        MeshRenderer r = meshObject.GetComponent<MeshRenderer>();
+        r.material.color = Color.red;
+
+        Mesh m = new Mesh ();
+        filter.mesh = m;
+        m.name = name + "_Mesh";
+        m.Clear();
+        return meshObject;
+    }
 
 	void PaintTerrain ()
 	{
 		bool reviseTerrain = gameState.showUpdatedTerrain;
 
 		if (reviseTerrain && currentCells != null) {
-			foreach (KeyValuePair<Vector2, int> entry in currentCells) {
-				Vector2 actualPos = entry.Key;
-				int count = gridCells [actualPos];
+
+            foreach (Vector2 actualPos in currentCells) {
+                Patch patch = patches[actualPos];
+				int count = (int)patch.health;
 				int w = (int)(actualPos.x / (float)widthInCells * (float)alphamapWidth);
 				int h = (int)(actualPos.y / (float)heightInCells * (float)alphamapHeight);
-				int maxCount = (count > 10 ? 10 : count);
+				int maxCount = (count > 100 ? 100 : count);
 				float[,,] existingMap = terrainData.GetAlphamaps (w, h, (int)alphamapWidthPerCell, (int)alphamapHeightPerCell);
-				if (existingMap [0, 0, 0] != 1 - (maxCount / 10.0f)) {
+				if (existingMap [0, 0, 0] != 1 - (maxCount / 100.0f)) {
 					float[,,] map = new float[(int)alphamapWidthPerCell, (int)alphamapHeightPerCell, terrainData.alphamapLayers];
 					for (int x = 0; x < (int)alphamapWidthPerCell; x++) {
 						for (int y = 0; y < (int)alphamapHeightPerCell; y++) {
-							map [x, y, 0] = 1 - (maxCount / 10.0f);
-							map [x, y, 1] = (maxCount / 10.0f);
+							map [x, y, 0] = (maxCount / 100.0f);
+							map [x, y, 1] = 1 - (maxCount / 100.0f);
 						}
 					}
 					terrainData.SetAlphamaps (w, h, map);
@@ -595,21 +635,21 @@ public class Grid : MonoBehaviour
 			GameObject dynamicObjects = GameObject.Find("DynamicObjects");
 			GameObject baseBuilding = GameObject.Find("BaseBuilding");
 			float buildingsDimension = cellSize / 4f;
-			if (currentCells != null) 
+			if (currentCells != null)
 			{
-				foreach (KeyValuePair<Vector2, int> entry in currentCells) {
-					Vector2 actualPos = entry.Key;
-					int count = entry.Value;
-					int w = (int)actualPos.x;
-					int h = (int)actualPos.y;
+				foreach (Vector2 actualPos in currentCells) {
 					if (! buildings.ContainsKey (actualPos)) {
+                        int w = (int)actualPos.x;
+                        int h = (int)actualPos.y;
 
 						GameObject gameObject = null;
 						int x = (int)((w / (float)widthInCells) * widthOfTerrain);
 						int y = (int)((h / (float)heightInCells) * heightOfTerrain);
-						int normalisedX = x - (int)(widthOfTerrain / 2);
-						int normalisedY = y - (int)(heightOfTerrain / 2);
-						float height = terrainData.GetHeight((int)GetHeightmapX(x), (int)GetHeightmapY(y)) + (buildingsDimension / 2);
+                        int normalisedX = x - (int)(widthOfTerrain / 2) - (cellSize / 2);
+						int normalisedY = y - (int)(heightOfTerrain / 2) - (cellSize / 2);
+						float height2 = terrainData.GetHeight((int)GetHeightmapX(x), (int)GetHeightmapY(y)) + (buildingsDimension / 2);
+                        float height = terrain.SampleHeight(new Vector3(normalisedX, 0, normalisedY));
+//                            terrain.GetHeight((int)GetHeightmapX(x), (int)GetHeightmapY(y)) + (buildingsDimension / 2);
 
 						float r = UnityEngine.Random.Range(0, 100);
 						if (r < gameState.chanceOfBuilding && height > 1.0f) {
@@ -617,6 +657,7 @@ public class Grid : MonoBehaviour
 //							GameObject buildingPrefab = buildingPrefabs[buildingIndex];
 //							gameObject = (GameObject)Instantiate(buildingPrefab);
 							gameObject = (GameObject)Instantiate(baseBuilding);
+                            Building building = gameObject.GetComponent<Building>();
 							gameObject.name = ("Building at: (" + normalisedX + ", " + normalisedY + ", " + height + ")");
 							
 							// TODO: Use actual terrain height for y value
@@ -625,7 +666,7 @@ public class Grid : MonoBehaviour
 							gameObject.transform.position = position;
 							gameObject.transform.localScale = scale;
 							gameObject.transform.parent = dynamicObjects.transform;
-							buildings.Add (actualPos, gameObject);
+                            buildings.Add (actualPos, building);
 						}
 					}
 				}
@@ -671,20 +712,34 @@ public class Grid : MonoBehaviour
 	{
 		// Normalise to the terrain space
 		Vector3 terrainPosition = new Vector3 (
-      worldPosition.x + widthOfTerrain / 2, 
-      worldPosition.y, 
-      worldPosition.z + heightOfTerrain / 2
+          worldPosition.x + widthOfTerrain / 2, 
+          worldPosition.y, 
+          worldPosition.z + heightOfTerrain / 2
 		);
 		int w = (int)(terrainPosition.x / widthOfTerrain * widthInCells);
 		int h = (int)(terrainPosition.z / heightOfTerrain * heightInCells);
 
 		if (w < widthInCells && h < heightInCells) {
 			Vector2 actualPos = new Vector2 (w, h);
-			if (! gridCells.ContainsKey (actualPos)) {
-				gridCells.Add (actualPos, 0);
-				currentCells.Add (actualPos, 0);
+
+            Patch patch;
+			if (! patches.ContainsKey (actualPos)) {
+                patch = new Patch(actualPos);
+                patches.Add(actualPos, patch);
 			}
-			gridCells [actualPos]++;
+            else 
+            {
+                patch = patches[actualPos];
+            }
+            bool significantChange = patch.visit();
+            if (!currentCells.Contains(actualPos) && significantChange)
+                currentCells.Add(actualPos);
+
+            if (buildings.ContainsKey (actualPos)) {
+                Building building = buildings[actualPos];
+                building.visit();
+            }
+
 		}
 	}
 }
