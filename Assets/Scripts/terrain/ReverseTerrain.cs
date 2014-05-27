@@ -17,7 +17,7 @@ public class ReverseTerrain : MonoBehaviour
 		float[,] newHeights = new float[width, height];
 		for (int x = 0; x < width ; x++) {
 			for (int y = 0; y < height ; y++) {
-				newHeights[x, height - 1 - y] = heightmaps[x, y];
+				newHeights[width - 1 - x, y] = heightmaps[x, y];
 			}
 		}
 		terrainData.SetHeights(0, 0, newHeights);

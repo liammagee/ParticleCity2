@@ -9,6 +9,7 @@ public class Building : MonoBehaviour
     float lastUpdated;
     int uses;
     float health;
+    public Vector2 position;
 
     public void Start() 
 	{

@@ -13,12 +13,14 @@ public class Grid : MonoBehaviour
 	private TerrainData originalTerrainData;
 	private Vector3 terrainSize;
 	private Vector3 origin;
+    private BorderControl borderControl;
 
 	// Different dimensions - cached on Start()
 	private float widthOfTerrain;
 	private float heightOfTerrain;
 	private int widthInCells;
 	private int heightInCells;
+    private Vector2 cellDimensions;
 	private int alphamapWidth;
 	private int alphamapHeight;
 	private int heightmapWidth;
@@ -32,6 +34,7 @@ public class Grid : MonoBehaviour
 	float alphamapHeightRatio = 0.0f;
 
     private List<Vector2> currentCells;
+    private Dictionary<Vector2, Patch> allPatches;
     private Dictionary<Vector2, Patch> patches;
     private Dictionary<Vector2, Building> buildings;
 
@@ -116,6 +119,55 @@ public class Grid : MonoBehaviour
 //		terrain.terrainData = originalTerrainData; 
 //	}
 
+
+    void Awake()
+    {
+        terrainData = terrain.terrainData;
+        
+        terrainSize = terrainData.size;
+        origin = terrain.transform.position;
+        
+        currentCells = new List<Vector2> ();
+        allPatches = new Dictionary<Vector2, Patch> ();
+        patches = new Dictionary<Vector2, Patch> ();
+        buildings = new Dictionary<Vector2, Building> ();
+        
+        gameState = GameObject.Find ("Main Camera").GetComponent<GameState> ();
+        borderControl = GameObject.Find ("Border").GetComponent<BorderControl> ();
+        
+        widthOfTerrain = (int)terrainSize.x;
+        heightOfTerrain = (int)terrainSize.z;
+        widthInCells = (int)widthOfTerrain / cellSize;
+        heightInCells = (int)heightOfTerrain / cellSize;
+        cellDimensions = new Vector2(widthInCells, heightInCells);
+        alphamapWidth = terrainData.alphamapWidth;
+        alphamapHeight = terrainData.alphamapHeight;
+        heightmapWidth = terrainData.heightmapWidth;
+        heightmapHeight = terrainData.heightmapHeight;
+        alphamapWidthPerCell = (alphamapWidth / (float)widthInCells);
+        alphamapHeightPerCell = (alphamapHeight / (float)heightInCells);
+        
+        heightmapWidthRatio = heightmapWidth / (float)widthInCells;
+        heightmapHeightRatio = heightmapHeight / (float)heightInCells;
+        alphamapWidthRatio = alphamapWidth / (float)widthInCells;
+        alphamapHeightRatio = alphamapHeight / (float)heightInCells;
+        
+        // Cursor variable initialisation
+        heightmapData = terrainData.GetHeights( 0, 0, heightmapWidth, heightmapHeight );
+        
+        // Create array of prefabs
+        buildingPrefabs = new List<GameObject> ();
+        buildingPrefabs.Add(building1);
+        buildingPrefabs.Add(building2);
+        buildingPrefabs.Add(building3);
+        buildingPrefabs.Add(building4);
+        buildingPrefabs.Add(building5);
+        buildingPrefabs.Add(building6);
+        buildingPrefabs.Add(building7);
+        buildingPrefabs.Add(building8);
+        buildingPrefabs.Add(building9);
+    }
+
 	void Start ()
 	{
 
@@ -125,58 +177,20 @@ public class Grid : MonoBehaviour
 		// Do something like this to load raw data
 		//LoadHeightmapData ("./Assets/Melbourne.raw");
 
-		// Re-colorise the splatmap, in case colors were distorted from previous runs
-		terrainData = terrain.terrainData;
-
-		terrainSize = terrainData.size;
-		origin = terrain.transform.position;
-  
-        currentCells = new List<Vector2> ();
-        patches = new Dictionary<Vector2, Patch> ();
-		buildings = new Dictionary<Vector2, Building> ();
-
-		gameState = GameObject.Find ("Main Camera").GetComponent<GameState> ();
-
-		widthOfTerrain = (int)terrainSize.x;
-		heightOfTerrain = (int)terrainSize.z;
-		widthInCells = (int)widthOfTerrain / cellSize;
-		heightInCells = (int)heightOfTerrain / cellSize;
-		alphamapWidth = terrainData.alphamapWidth;
-		alphamapHeight = terrainData.alphamapHeight;
-		heightmapWidth = terrainData.heightmapWidth;
-		heightmapHeight = terrainData.heightmapHeight;
-		alphamapWidthPerCell = (alphamapWidth / (float)widthInCells);
-		alphamapHeightPerCell = (alphamapHeight / (float)heightInCells);
-
-		heightmapWidthRatio = heightmapWidth / (float)widthInCells;
-		heightmapHeightRatio = heightmapHeight / (float)heightInCells;
-		alphamapWidthRatio = alphamapWidth / (float)widthInCells;
-		alphamapHeightRatio = alphamapHeight / (float)heightInCells;
-
-		// Cursor variable initialisation
-		heightmapData = terrainData.GetHeights( 0, 0, heightmapWidth, heightmapHeight );
-
-		// Create array of prefabs
-		buildingPrefabs = new List<GameObject> ();
-		buildingPrefabs.Add(building1);
-		buildingPrefabs.Add(building2);
-		buildingPrefabs.Add(building3);
-		buildingPrefabs.Add(building4);
-		buildingPrefabs.Add(building5);
-		buildingPrefabs.Add(building6);
-		buildingPrefabs.Add(building7);
-		buildingPrefabs.Add(building8);
-		buildingPrefabs.Add(building9);
 
 		BuildGrid ();  
 		ShowStats ();
-		ConstructMesh();
+        ConstructMesh();
+        RescalePatches();
 
 		// Kick off coroutines
         StartCoroutine("PeriodicUpdate");
-        StartCoroutine("IntervalUpdate");
-
 	}
+
+    public Vector2 GetCellDimensions()
+    {
+        return cellDimensions;
+    }
 
 
 	void ShowStats ()
@@ -288,32 +302,46 @@ public class Grid : MonoBehaviour
         {
             PaintTerrain ();
             PaintBuildings ();
+            RecuperatePatches();
+            DeteriorateBuildings();
             ClearCurrentCells();
-            yield return new WaitForSeconds(0.1f);
+            yield return new WaitForSeconds(0.25f);
         }
     }
     
-    /// <summary>
-    /// Recuperate patches and run down buildings at intervals
-    /// </summary>
-    IEnumerator IntervalUpdate() 
+    void RecuperatePatches()
     {
-        for (;;) 
+        foreach(KeyValuePair<Vector2, Patch> entry in patches) 
         {
-            foreach(KeyValuePair<Vector2, Patch> entry in patches) 
-            {
-                Patch patch = entry.Value;
+            Patch patch = entry.Value;
+            if (!currentCells.Contains(patch.position))
                 patch.recuperate();
-            }
-            foreach(KeyValuePair<Vector2, Building> entry in buildings) 
-            {
-                Building building = entry.Value;
-                building.disintegrate();
-            }
-            yield return new WaitForSeconds(gameState.timeSecondsPerUnit);
         }
     }
     
+    public void RescalePatches()
+    {
+        patches.Clear();
+        foreach(KeyValuePair<Vector2, Patch> entry in allPatches) 
+        {
+            Vector2 position = entry.Key;
+            Patch patch = entry.Value;
+            Vector3 position3d = new Vector3(position.x + (widthOfTerrain / 2f), 0, position.y + (heightOfTerrain / 2f));
+            if (borderControl.WithinBorders(position3d))
+                patches.Add(position, patch);
+        }
+    }
+
+    void DeteriorateBuildings()
+    {
+        foreach(KeyValuePair<Vector2, Building> entry in buildings) 
+        {
+            Building building = entry.Value;
+            if (!currentCells.Contains(building.position))
+                building.disintegrate();
+        }
+    }
+
 
 
 
@@ -463,8 +491,11 @@ public class Grid : MonoBehaviour
 				}
 
                 // Add a new Patch while here
-                Vector2 position = new Vector2(x, y);
-                patches.Add (position, new Patch(position));
+                if (y % cellSize == 0) 
+                {
+                    Vector2 position = new Vector2(x, y);
+                    allPatches.Add (position, new Patch(position));
+                }
 			}
 			lineRenderer.SetVertexCount (points.Count);
 			for (int i = 0; i < points.Count; i++) {
@@ -604,28 +635,41 @@ public class Grid : MonoBehaviour
 	{
 		bool reviseTerrain = gameState.showUpdatedTerrain;
 
-		if (reviseTerrain && currentCells != null) {
+		if (reviseTerrain) {
 
-            foreach (Vector2 actualPos in currentCells) {
-                Patch patch = patches[actualPos];
-				int count = (int)patch.health;
-				int w = (int)(actualPos.x / (float)widthInCells * (float)alphamapWidth);
-				int h = (int)(actualPos.y / (float)heightInCells * (float)alphamapHeight);
-				int maxCount = (count > 100 ? 100 : count);
-				float[,,] existingMap = terrainData.GetAlphamaps (w, h, (int)alphamapWidthPerCell, (int)alphamapHeightPerCell);
-				if (existingMap [0, 0, 0] != 1 - (maxCount / 100.0f)) {
-					float[,,] map = new float[(int)alphamapWidthPerCell, (int)alphamapHeightPerCell, terrainData.alphamapLayers];
-					for (int x = 0; x < (int)alphamapWidthPerCell; x++) {
-						for (int y = 0; y < (int)alphamapHeightPerCell; y++) {
-							map [x, y, 0] = (maxCount / 100.0f);
-							map [x, y, 1] = 1 - (maxCount / 100.0f);
-						}
-					}
-					terrainData.SetAlphamaps (w, h, map);
-				}
-			}
-		}
-	}
+            // Obtain the alphamap to update
+            Vector2[] extents = borderControl.GetBorderVertices();
+            int originX = Mathf.FloorToInt((extents[0].x / widthInCells ) * alphamapWidth);
+            int originY = Mathf.FloorToInt((extents[0].y / widthInCells) * alphamapHeight);
+            int endX = Mathf.FloorToInt(((extents[1].x - extents[0].x) / widthInCells) * alphamapWidth);
+            int endY = Mathf.FloorToInt(((extents[1].y - extents[0].y) / widthInCells) * alphamapHeight);
+            int cellOriginX = (int)extents[0].x;
+            int cellOriginY = (int)extents[0].y;
+            float[,,] changeableMap = terrainData.GetAlphamaps (originX, originY, endX, endY);
+
+
+            foreach (KeyValuePair<Vector2, Patch> entry in patches) {
+                Vector2 actualPos = entry.Key;
+                Patch patch = entry.Value;
+                if (patch.SignificantChange())
+                {
+                    int count = (int)patch.health;
+                    int cellOffsetX = (int)((actualPos.x - cellOriginX) / widthInCells * alphamapWidth);
+                    int cellOffsetY = (int)((actualPos.y - cellOriginY) / heightInCells * alphamapHeight);
+                    int maxCount = (count > 100 ? 100 : count);
+                    for (int y = cellOffsetY; y < cellOffsetY + (int)alphamapHeightPerCell; y++) {
+                        for (int x = cellOffsetX; x < cellOffsetX + (int)alphamapWidthPerCell; x++) {
+                            changeableMap [y, x, 0] = (maxCount / 100.0f);
+                            changeableMap [y, x, 1] = 1 - (maxCount / 100.0f);
+                            changeableMap [y, x, 2] = 0f;
+                            changeableMap [y, x, 3] = 0f;
+                        }
+                    }
+                }
+            }
+            terrainData.SetAlphamaps (originX, originY, changeableMap);
+        }
+    }
 
 	void PaintBuildings ()
 	{
@@ -658,6 +702,7 @@ public class Grid : MonoBehaviour
 //							gameObject = (GameObject)Instantiate(buildingPrefab);
 							gameObject = (GameObject)Instantiate(baseBuilding);
                             Building building = gameObject.GetComponent<Building>();
+                            building.position = actualPos;
 							gameObject.name = ("Building at: (" + normalisedX + ", " + normalisedY + ", " + height + ")");
 							
 							// TODO: Use actual terrain height for y value
@@ -708,21 +753,23 @@ public class Grid : MonoBehaviour
 		terrain.terrainData.SetAlphamaps (0, 0, map);
 	}
 
-	public void TurnOnCell (Vector3 worldPosition)
+	public Patch TurnOnCell (Vector3 worldPosition)
 	{
-		// Normalise to the terrain space
+        if (!borderControl.WithinBorders(worldPosition))
+            return null;
+        // Normalise to the terrain space
 		Vector3 terrainPosition = new Vector3 (
-          worldPosition.x + widthOfTerrain / 2, 
+          worldPosition.x + widthOfTerrain / 2 , 
           worldPosition.y, 
           worldPosition.z + heightOfTerrain / 2
 		);
 		int w = (int)(terrainPosition.x / widthOfTerrain * widthInCells);
 		int h = (int)(terrainPosition.z / heightOfTerrain * heightInCells);
 
-		if (w < widthInCells && h < heightInCells) {
+        Patch patch = null;
+        if (w < widthInCells && h < heightInCells) {
 			Vector2 actualPos = new Vector2 (w, h);
 
-            Patch patch;
 			if (! patches.ContainsKey (actualPos)) {
                 patch = new Patch(actualPos);
                 patches.Add(actualPos, patch);
@@ -741,5 +788,6 @@ public class Grid : MonoBehaviour
             }
 
 		}
+        return patch;
 	}
 }

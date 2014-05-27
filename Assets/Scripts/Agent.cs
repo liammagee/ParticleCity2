@@ -29,15 +29,15 @@ public class Agent : MonoBehaviour
 	GameState gameState;
 
 	// Health statistics
-	private float health = 100f;
-	private float degradation = 100f;
+	public float health = 100f;
+	private float degradation = 0.1f;
 
 	// General statistics
 	public enum Gender { Male, Female, Unspecified };
 	private Gender gender;
-	private float birthdate;
-	
-	private List<Agent> children;
+        private float birthdate;
+
+        private List<Agent> children;
 
 	private Agent mother;
 	private Agent father;
@@ -184,7 +184,18 @@ public class Agent : MonoBehaviour
 		// NOTE: Much faster than SimpleMove
 //		controller.Move(currentDirection * Time.deltaTime);
 		controller.SimpleMove(currentDirection);
-		
+
+        // Turn on cells visited
+//        if (grid.enabled)
+        Patch patch = grid.TurnOnCell(gameObject.transform.position);
+
+        // Adjust the health
+        if (patch != null)
+            {
+                health -= (degradation - ((patch.health / 100f)));
+                health = Mathf.Clamp(health, 0, 100);
+            }
+
 		for (int j = 0; j < dummies.Count; j++) {
 			GameObject dummyObj = (GameObject)dummies[j];
 			Destroy(dummyObj.GetComponent("LineRenderer"));
@@ -278,10 +289,6 @@ public class Agent : MonoBehaviour
 				}
 			}
 		}
-
-		// Turn on cells visited
-		if (grid.enabled)
-			grid.TurnOnCell(gameObject.transform.position);
 	}
 
 	Vector3[] MakeQuad(Vector3 s, Vector3 e, float w) {

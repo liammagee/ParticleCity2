@@ -7,9 +7,17 @@ public class ToggleButtonEvents : MonoBehaviour
 
 	public void OnClick( dfControl control, dfMouseEventArgs mouseEvent )
 	{
-		if (Time.timeScale == 0.0F)
-			Time.timeScale = 1.0F;
+        if (Time.timeScale == 0.0F) 
+        {
+            dfButton button = (dfButton)control;
+            button.Text = "Pause";
+            Time.timeScale = 1.0F;
+        }
 		else
-			Time.timeScale = 0.0F;
+        {
+            dfButton button = (dfButton)control;
+            button.Text = "Play";
+            Time.timeScale = 0.0F;
+        }
 	}
 }
