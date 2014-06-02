@@ -4,12 +4,15 @@ using System.Collections.Generic;
 
 public class Building : MonoBehaviour
 {
+    // Public variables
+    public float health;
+    public Vector2 position;
+
+    // Private variables
     Vector3 dimensions;
     float firstConstructed;
     float lastUpdated;
     int uses;
-    float health;
-    public Vector2 position;
 
     public void Start() 
 	{

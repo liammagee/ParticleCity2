@@ -17,6 +17,7 @@ public class BorderControl : MonoBehaviour
     TerrainData terrainData;
     Vector3 terrainSize;
     Vector2 cellDimensions;
+    Vector2 habitableDimensions;
     Vector2[] extents;
 
     void Start()
@@ -51,6 +52,16 @@ public class BorderControl : MonoBehaviour
     {
         return extents;
     }
+    
+    public Vector2 GetHabitableDimension()
+    {
+        return habitableDimensions;
+    }
+    
+    public Vector2 GetCentralCell()
+    {
+        return habitableDimensions;
+    }
 
 
 	public void RedoBorders(float value) 
@@ -61,18 +72,18 @@ public class BorderControl : MonoBehaviour
         float offsetY = gameState.originZ;
         int cellOffsetX = Mathf.FloorToInt(gameState.originX / cellSize);
         int cellOffsetY = Mathf.FloorToInt(gameState.originZ / cellSize);
-        cellDimensions = grid.GetCellDimensions();
-        cellDimensions *= 0.5f;
-        int x = Mathf.FloorToInt(adjustPercent * cellDimensions.x);
-        int y = Mathf.FloorToInt(adjustPercent * cellDimensions.y);
-        float terrainX = x * cellSize;
-        float terrainY = x * cellSize;
-        float terrainZ = y * cellSize;
+        cellDimensions = grid.GetCellDimensions() * 0.5f;
+        habitableDimensions = new Vector2();
+        habitableDimensions.x = Mathf.FloorToInt(adjustPercent * cellDimensions.x);
+        habitableDimensions.y = Mathf.FloorToInt(adjustPercent * cellDimensions.y);
+        float terrainX = habitableDimensions.x * cellSize;
+        float terrainY = habitableDimensions.x * cellSize;
+        float terrainZ = habitableDimensions.y * cellSize;
 		float wallWidth = 1.0f;
         extents = new Vector2[]
         {
-            new Vector2(cellDimensions.x - x + cellOffsetX, cellDimensions.y - y + cellOffsetY),
-            new Vector2(cellDimensions.x + x + cellOffsetX, cellDimensions.y + y + cellOffsetY)
+            new Vector2(cellDimensions.x - habitableDimensions.x + cellOffsetX, cellDimensions.y - habitableDimensions.y + cellOffsetY),
+            new Vector2(cellDimensions.x + habitableDimensions.x + cellOffsetX, cellDimensions.y + habitableDimensions.y + cellOffsetY)
         };
 
         // Set positions and scales on border surfaces

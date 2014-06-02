@@ -7,8 +7,6 @@ using System.Linq;
 [RequireComponent (typeof (GameState))]
 public class ParticleCity : MonoBehaviour 
 {
-
-
 	int agentNumber;
 	public float particleScale;
 	float boundarySize;
@@ -22,12 +20,32 @@ public class ParticleCity : MonoBehaviour
 	bool shiftHeld = false;
 	public GameState gamestate;
 
+    // Building types - need to be assigned distinct prefabs
+    public GameObject character1;
+    public GameObject character2;
+    public GameObject character3;
+    public GameObject character4;
+    public GameObject character5;
 
-	public void Start () 
+    // Cached objects
+    GameObject[] characterPrefabs;
+    GameObject baseAgent;
+    Transform cameraTransform;
+    Transform dynamicObjectsTransform;
+    Grid grid;
+    BorderControl borderControl;
+
+    public void Start () 
     {
 		if (gamestate == null)
 			gamestate = GameObject.Find("Main Camera").GetComponent<GameState>();
 		agentNumber = gamestate.numAgents;
+
+        dynamicObjectsTransform = GameObject.Find("DynamicObjects").transform;
+        baseAgent = GameObject.Find("BaseAgent");
+        grid = GameObject.Find ("GridOrigin").GetComponent<Grid>();
+        cameraTransform = GameObject.Find ("Main Camera").transform;
+        borderControl = GameObject.Find("Border").GetComponent<BorderControl>();
 
 		Init();
 	}
@@ -36,9 +54,12 @@ public class ParticleCity : MonoBehaviour
     {
 		agents = new List<Agent>();
         deadAgents = new List<Agent>();
+        characterPrefabs = new GameObject[]
+        {
+            character1, character2, character3, character4, character5
+        };
 
         // Do the borders conservatively
-		BorderControl borderControl = GameObject.Find("Border").GetComponent<BorderControl>();
 		boundarySize = gamestate.boundarySize;
 		if (boundarySize == 0)
 			boundarySize = 50;
@@ -48,7 +69,6 @@ public class ParticleCity : MonoBehaviour
 		UpdateWorldDimensions();
 
 		// Spawn the right number of children
-		GameObject baseAgent = GameObject.Find("BaseAgent");
 		for (int i = 0; i < agentNumber; i++) {
 			Agent agent = SpawnAgent(baseAgent);
             agents.Add(agent);
@@ -58,11 +78,15 @@ public class ParticleCity : MonoBehaviour
 		StartCoroutine("Populate");
 	}
 
+	public int GetAgentCount()
+	{
+		return agents.Count;
+	}
+
 	/// <summary>
 	/// Handles asynchronous population of the simulation model.
 	/// </summary>
 	IEnumerator Populate() {
-		GameObject baseAgent = GameObject.Find("BaseAgent");
 		for (;;) {
 			float ct = gamestate.CurrentTimeInUnits();
 
@@ -210,22 +234,17 @@ public class ParticleCity : MonoBehaviour
 	public void UpdateWorldDimensions() {
 		
 		// Adjust the baseAgent
-		Grid grid = GameObject.Find ("GridOrigin").GetComponent<Grid>();
 		Terrain terrain = grid.GetTerrain();
-		GameObject baseAgent = GameObject.Find("BaseAgent");
         Vector3 position = new Vector3(gamestate.originX, 0, gamestate.originZ);
         float height = terrain.SampleHeight(position);
         position.y = height + 1.0f;
         baseAgent.transform.position = position;
 
 		// Adjust the camera
-		GameObject camera = GameObject.Find ("Main Camera");
-		camera.transform.position = new Vector3(gamestate.originX, camera.transform.position.y, gamestate.originZ);
+        cameraTransform.position = new Vector3(gamestate.originX, cameraTransform.position.y, gamestate.originZ);
 	}
 
 	public Agent SpawnAgent(GameObject agent) {
-		Grid grid = GameObject.Find ("GridOrigin").GetComponent<Grid>();
-
 		// Random x and z values
         Terrain terrain = grid.GetTerrain();
 		TerrainData terrainData = terrain.terrainData; 
@@ -245,17 +264,26 @@ public class ParticleCity : MonoBehaviour
 		// Set the position and scale
 		Vector3 scale = new Vector3(particleScale, particleScale, particleScale);
 
-		// Instantiate the new agent
-		GameState gameState = GameObject.Find("Main Camera").GetComponent<GameState>();
-		GameObject dynamicObjects = GameObject.Find("DynamicObjects");
-		GameObject newAgent = (GameObject)Instantiate(agent);
-		newAgent.transform.parent = dynamicObjects.transform;
+
+        // Instantiate the new agent
+        GameObject newAgent = (GameObject)Instantiate(agent);
+		newAgent.transform.parent = dynamicObjectsTransform;
 		newAgent.transform.position = position;
 		newAgent.transform.localScale = scale;
 		newAgent.name = "Agent " + (agents.Count);
 
 		Agent agentScript  = (Agent)newAgent.GetComponent("Agent");
-		agentScript.showNetwork = gameState.showNetwork;
+		agentScript.showNetwork = gamestate.showNetwork;
+
+        // Dynamically assign character to agent
+        int characterIndex = UnityEngine.Random.Range(0, characterPrefabs.Count() - 1);
+        GameObject characterPrefab = characterPrefabs[characterIndex];
+        GameObject character = (GameObject)Instantiate(characterPrefab);
+        character.transform.parent = newAgent.transform;
+        character.transform.position = newAgent.transform.position + new Vector3(0, -0.5f, 0);
+
+        agentScript.character = character;
+
 
 		float ct = gamestate.CurrentTimeInUnits ();
 		float lifeExpectancy = LifeExpectancy(ct);
@@ -278,7 +306,6 @@ public class ParticleCity : MonoBehaviour
 			agents.RemoveRange(newSize, agents.Count - newSize - 1);
 		}
 		else if (newSize > agents.Count) {
-			GameObject baseAgent = GameObject.Find("BaseAgent");
 			for (int i = agents.Count; i < newSize ;i++) {
 				Agent agent = SpawnAgent(baseAgent);
                 agents.Add(agent);
@@ -288,14 +315,12 @@ public class ParticleCity : MonoBehaviour
 
 	public void SoftRestart() {
 		Time.timeScale = 0.0F;
-		GameObject dynamicObjects = GameObject.Find("DynamicObjects");
-    int childs = dynamicObjects.transform.childCount;
-    for (int i = childs - 1; i >= 0; i--)
-    {
-        GameObject.Destroy(dynamicObjects.transform.GetChild(i).gameObject);
-    }
+        int childs = dynamicObjectsTransform.childCount;
+        for (int i = childs - 1; i >= 0; i--)
+        {
+            GameObject.Destroy(dynamicObjectsTransform.GetChild(i).gameObject);
+        }
 
-		Grid grid = GameObject.Find("GridOrigin").GetComponent<Grid>();
 		grid.InitGrid();
 
 		Init();

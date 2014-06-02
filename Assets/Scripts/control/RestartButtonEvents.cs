@@ -4,6 +4,12 @@ using System.Collections.Generic;
 
 public class RestartButtonEvents : MonoBehaviour 
 {
+    GameState gameState = null;
+
+    void Awake()
+    {
+        gameState = GameObject.Find ("Main Camera").GetComponent<GameState>();
+    }
 
 	public void OnClick( dfControl control, dfMouseEventArgs mouseEvent )
 	{

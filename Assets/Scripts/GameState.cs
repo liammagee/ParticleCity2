@@ -70,7 +70,7 @@ public class GameState : MonoBehaviour
 	private float lastRecordedTime;
 	private bool initiated = false;
 
-	public void Start() {
+	public void Awake() {
 		initiated = false;
 		if (numAgents == 0)
 			numAgents = 10;
@@ -82,6 +82,8 @@ public class GameState : MonoBehaviour
 		showBuildings = false;
 		showUpdatedTerrain = false;
 		showGrid = false;
+
+//        DontDestroyOnLoad(this);
 
 		InitiateClock();
 	}

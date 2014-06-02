@@ -12,6 +12,7 @@ public class Agent : MonoBehaviour
 	/// Public variables
 	public bool using3d;
 	public bool showNetwork;
+	public GameObject character;
 
 	/// Network variables
 	private ArrayList friends;
@@ -25,8 +26,12 @@ public class Agent : MonoBehaviour
 	static bool running;
 	Vector3 currentDirection;
 	Vector3 lastPosition;
+
+    // Cached variables
 	Grid grid;
 	GameState gameState;
+        Transform dynamicObjectsTransform;
+
 
 	// Health statistics
 	public float health = 100f;
@@ -50,6 +55,13 @@ public class Agent : MonoBehaviour
 	private int[] tris;
 	public float gravity = 100.0F;
 
+    void Awake()
+    {
+        grid = GameObject.Find ("GridOrigin").GetComponent<Grid>();
+        gameState = GameObject.Find ("Main Camera").GetComponent<GameState>();
+        dynamicObjectsTransform = GameObject.Find("DynamicObjects").transform;
+    }
+
 	public void Start() {
 		friends = new ArrayList();
 		dummies = new ArrayList();
@@ -64,8 +76,6 @@ public class Agent : MonoBehaviour
 		showNetwork = false;
 
 		lastPosition = gameObject.transform.position;
-		grid = GameObject.Find ("GridOrigin").GetComponent<Grid>();
-		gameState = GameObject.Find ("Main Camera").GetComponent<GameState>();
 
 		if (birthdate == 0)
 			birthdate = gameState.CurrentTimeInUnits();
@@ -316,8 +326,6 @@ public class Agent : MonoBehaviour
 	}
 
   void OnControllerColliderHit(ControllerColliderHit hit) {
-  	GameState gameState = GameObject.Find("Main Camera").GetComponent<GameState>();
-  	Grid grid = GameObject.Find("GridOrigin").GetComponent<Grid>();
 		// Process border collision
 		if (hit.collider.gameObject.name.Equals("Terrain")) {
 		  	TerrainData terrainData = grid.GetTerrain().terrainData; //Terrain.activeTerrain.terrainData;
@@ -379,9 +387,8 @@ public class Agent : MonoBehaviour
 					return;
 
 				friends.Add(hit.collider.gameObject);
-				GameObject dynamicObjects = GameObject.Find("DynamicObjects");
 				GameObject dummy = new GameObject(gameObject.name + " link with " + hit.collider.gameObject.name);
-				dummy.transform.parent = dynamicObjects.transform;
+                dummy.transform.parent = dynamicObjectsTransform;
 				LineRenderer lineRenderer = (LineRenderer)dummy.AddComponent("LineRenderer");
 				lineRenderer.SetPosition(0, new Vector3(0f, 0f, 0f));
 				lineRenderer.SetPosition(1, new Vector3(0f, 0f, 0f));
