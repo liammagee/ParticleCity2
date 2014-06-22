@@ -1,4 +1,5 @@
 using UnityEngine;
+using FiercePlanet;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -120,9 +121,10 @@ public class Grid : MonoBehaviour
 		// Do something like this to load raw data
 		//LoadHeightmapData ("./Assets/Melbourne.raw");
 
-		BuildGrid ();  
-		ShowStats ();
-//        ConstructMesh();
+//        BuildGrid ();  
+        PaintGrid ();  
+
+        ShowStats ();
         RescalePatches();
 
 		// Kick off coroutines
@@ -390,9 +392,7 @@ public class Grid : MonoBehaviour
 			LineRenderer lineRenderer = (LineRenderer)dummy.AddComponent ("LineRenderer");
 			lineRenderer.material.color = Color.green;
 			lineRenderer.SetWidth (0.5f, 0.5f);
-
 			List<Vector3> points = new List<Vector3> ();
-            
 
 			for (int y = 0; y <= heightOfTerrain; y ++) {
 				float height = terrainData.GetHeight ((int)(x * xFactor), (int)(y * yFactor)) + 1.0f;
@@ -452,17 +452,17 @@ public class Grid : MonoBehaviour
         CheckboxShowGrid.visibleGrid = visibleGrid;
         visibleGrid.SetActive (false);
 
-        int dimension = 128;
-        int vertexLength = Mathf.FloorToInt (widthOfTerrain / (float)dimension);
+        int dimension = 129;
+        int vertexLength = Mathf.FloorToInt (widthOfTerrain / ((float)dimension - 1));
 
         Vector3 position = new Vector3(-Mathf.FloorToInt(widthOfTerrain / 2f), -1.0f, -Mathf.FloorToInt(widthOfTerrain / 2f));
         GameObject meshObject = CreateMeshObject("TerrainMesh", vertexLength, position);
         meshObject.transform.parent = visibleGrid.transform;
         Mesh m = (meshObject.GetComponent<MeshFilter>()).mesh;
 
-        Vector3[] verts = new Vector3[dimension * dimension];
-        Vector2[] uvs = new Vector2[dimension * dimension];
-        int[] tris = new int[ (dimension) * 2 * (dimension) * 3];
+        Vector3[] verts = new Vector3[dimension * dimension * 2];
+        Vector2[] uvs = new Vector2[dimension * dimension * 2];
+        int[] tris = new int[ (dimension - 1) * 2 * (dimension - 1) * 3 * 2];
     
         float uvStep = 1.0f / 4.0f;
         
@@ -470,14 +470,14 @@ public class Grid : MonoBehaviour
         int triIndex = 0;
         for ( int z = 0; z < (dimension) ; z += 1)
         {
-            for ( int x = 0; x < dimension  ; x += 2 )
+            for ( int x = 0; x < (dimension) ; x += 1 )
             {
                 verts[ index ] = new Vector3(x * vertexLength - 0.5f, 0, z * vertexLength - 0.5f);
                 verts[ index + 1 ] = new Vector3(x * vertexLength + 0.5f, 0, z * vertexLength + 0.5f);
                 uvs[ index ] = new Vector2( ((float)x * vertexLength) * uvStep - 0.5f, ((float)z * vertexLength) * uvStep - 0.5f );
                 uvs[ index + 1 ] = new Vector2( ((float)x * vertexLength) * uvStep + 0.5f, ((float)z * vertexLength) * uvStep + 0.5f );
 
-                if (x < dimension && z < dimension ) 
+                if (x < dimension - 1 && z < dimension - 1 ) 
                 {
                     tris[ triIndex + 0 ] = index + 0;
                     tris[ triIndex + 1 ] = index + 1;
@@ -488,33 +488,51 @@ public class Grid : MonoBehaviour
                     tris[ triIndex + 5 ] = index + 2;
                     
                     tris[ triIndex + 6 ] = index + 0;
-                    tris[ triIndex + 7 ] = index + (dimension);
+                    tris[ triIndex + 7 ] = index + (dimension * 2);
                     tris[ triIndex + 8 ] = index + 1;
                     
                     tris[ triIndex + 9 ] = index + 1;
-                    tris[ triIndex + 10 ] = index + (dimension);
-                    tris[ triIndex + 11 ] = index + (dimension) + 1;
-                }   
+                    tris[ triIndex + 10 ] = index + (dimension * 2);
+                    tris[ triIndex + 11 ] = index + (dimension * 2 + 1);
                     triIndex += 12;
+                }   
 
                 index += 2;
             }
         }
-        
+
+        verts = AdjustVertices(verts, dimension);
+
         // - Build Mesh -
         m.vertices = verts;
         m.uv = uvs;
         m.triangles = tris;
-        
+
         m.RecalculateBounds();
         m.RecalculateNormals();
-        
-        Vector2 heightmapPos = GetHeightmapPosition (Vector3.zero);
-        Vector3[,] mapGrid = CalculateGrid (heightmapPos, dimension, dimension, vertexLength);
-
-        //UpdateMesh (mapGrid, m);
     }
 
+
+    
+    public Vector3[] AdjustVertices(Vector3[] verts, int dimension)
+    {
+        float xFactor = heightmapWidth / (float)widthOfTerrain;
+        float yFactor = heightmapHeight / (float)heightOfTerrain;
+        if (heightmapData == null)
+            heightmapData = terrainData.GetHeights( 0, 0, heightmapWidth, heightmapHeight );
+        for (int i = 0; i < verts.Length; i++)
+        {
+            Vector3 vert = verts[i];
+            int position = Mathf.FloorToInt(i / 2f);
+            int x = Mathf.FloorToInt((position % (float)dimension)) * cellSize - Mathf.FloorToInt(widthOfTerrain / 2f);
+            int z = Mathf.FloorToInt((position / (float)dimension)) * cellSize - Mathf.FloorToInt(heightOfTerrain / 2f);
+            float y = terrain.SampleHeight(new Vector3(x, 0, z)) + 3f;
+
+//            float y = heightmapData[ (int)z, (int)y] * terrainSize.y; // heightmapData is Y,X ; not X,Y (reversed)
+            verts[i] = new Vector3(vert.x, y, vert.z);
+        }
+        return verts;
+    }
     
     public Vector2 GetHeightmapPosition(Vector3 point)
     {
@@ -522,7 +540,7 @@ public class Grid : MonoBehaviour
         // find the heightmap position of that hit
         heightmapPos.x = Mathf.FloorToInt(( point.x / (float)widthOfTerrain ) * widthInCells);
         heightmapPos.y = Mathf.FloorToInt(( point.z / (float)heightOfTerrain ) * heightInCells ); 
-
+        
         // clamp to heightmap dimensions to avoid errors
         heightmapPos.x = Mathf.Clamp( heightmapPos.x, 0, widthInCells - 1 );
         heightmapPos.y = Mathf.Clamp( heightmapPos.y, 0, heightInCells - 1 );
@@ -530,8 +548,7 @@ public class Grid : MonoBehaviour
         return heightmapPos;
     }
     
-    
-    
+
     public Vector3[,] CalculateGrid(Vector2 heightmapPos, int width, int height, int increment)
     {
         float xFactor = heightmapWidth / (float)widthOfTerrain;
@@ -567,6 +584,25 @@ public class Grid : MonoBehaviour
         return mapGrid;
     }
 
+    public void UpdateMesh(Vector3[,] mapGrid, Mesh mesh)
+    {
+        Vector3[] verts = mesh.vertices;
+        int index = 0;
+        for ( int z = 0; z < mapGrid.GetLength(1); z ++ )
+        {
+            for ( int x = 0; x < mapGrid.GetLength(0); x ++ )
+            {
+                verts[ index ] = mapGrid[ x, z ];
+                index ++;
+            }
+        }
+        
+        // assign to mesh
+        mesh.vertices = verts;
+        
+        mesh.RecalculateBounds();
+        mesh.RecalculateNormals();
+    }
     
     void PaintNetwork()
     {

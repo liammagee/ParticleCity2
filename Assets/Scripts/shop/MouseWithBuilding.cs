@@ -113,13 +113,14 @@ public class MouseWithBuilding : MonoBehaviour
         Vector3 rayHitPoint = RaycastToTerrain ();
         Vector2 heightmapPos = grid.GetHeightmapPosition (rayHitPoint);
         Vector3[,] mapGrid = grid.CalculateGrid (heightmapPos, cellSize, cellSize, 1);
-        UpdateMesh (mapGrid, cursorMesh);
+        grid.UpdateMesh (mapGrid, cursorMesh);
 
         if (Input.GetMouseButtonDown(0)) 
         {
             grid.AddBuilding(heightmapPos + new Vector2(1, 1));
             showCustomCursor = false;
-            cursorMesh.Clear();  
+            cursorMesh.Clear(); 
+            ConstructMesh();
         }
     }
     
@@ -140,25 +141,7 @@ public class MouseWithBuilding : MonoBehaviour
         return rayHitPoint;
     }
 
-    void UpdateMesh(Vector3[,] mapGrid, Mesh mesh)
-    {
-        Vector3[] verts = mesh.vertices;
-        int index = 0;
-        for ( int z = 0; z < mapGrid.GetLength(1); z ++ )
-        {
-            for ( int x = 0; x < mapGrid.GetLength(0); x ++ )
-            {
-                verts[ index ] = mapGrid[ x, z ];
-                index ++;
-            }
-        }
-        
-        // assign to mesh
-        mesh.vertices = verts;
-        
-        mesh.RecalculateBounds();
-        mesh.RecalculateNormals();
-    }
+
 
 
 }

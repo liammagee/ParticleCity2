@@ -2,38 +2,42 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-public class Building : MonoBehaviour
-{
-    // Public variables
-    public float health;
-    public Vector2 position;
+namespace FiercePlanet {
 
-    // Private variables
-    Vector3 dimensions;
-    float firstConstructed;
-    float lastUpdated;
-    int uses;
-
-    public void Start() 
-	{
-        dimensions = new Vector3(1f, 1f, 1f);
-        firstConstructed = Time.time;
-        uses = 0;
-        health = 100;
-	}
-
-
-    public void visit() 
+    public class Building : MonoBehaviour
     {
-        lastUpdated = Time.time;
-        uses++;
-    }
+        // Public variables
+        public float health;
+        public Vector2 position;
 
-    public void disintegrate()
-    {
-        if (health > 0)
-            health -= (uses / 100);
-        uses = 0;
+        // Private variables
+        Vector3 dimensions;
+        float firstConstructed;
+        float lastUpdated;
+        int uses;
+
+        public void Start() 
+    	{
+            dimensions = new Vector3(1f, 1f, 1f);
+            firstConstructed = Time.time;
+            uses = 0;
+            health = 100;
+    	}
+
+
+        public void visit() 
+        {
+            lastUpdated = Time.time;
+            uses++;
+        }
+
+        public void disintegrate()
+        {
+            if (health > 0)
+                health -= (uses / 100);
+            uses = 0;
+        }
     }
+    
 }
 
