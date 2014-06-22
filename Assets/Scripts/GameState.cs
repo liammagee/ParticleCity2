@@ -78,12 +78,8 @@ public class GameState : MonoBehaviour
 			speedAgents = 10;
 		if (boundarySize == 0)
 			boundarySize = 10;
-		showNetwork = false;
-		showBuildings = false;
-		showUpdatedTerrain = false;
-		showGrid = false;
 
-//        DontDestroyOnLoad(this);
+		//        DontDestroyOnLoad(this);
 
 		InitiateClock();
 	}
