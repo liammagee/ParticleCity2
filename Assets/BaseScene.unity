@@ -669,7 +669,7 @@ MonoBehaviour:
   renderOrder: 49
   isLocalized: 0
   hotZoneScale: {x: 1, y: 1}
-  atlas: {fileID: 11400000, guid: dfcff9db2de043844b16116ef461be54, type: 2}
+  atlas: {fileID: 11400000, guid: 061b63b910d71734eb8a953efb83a358, type: 2}
   backgroundSprite: shop
   hoverSprite: 
   disabledSprite: 
@@ -1339,7 +1339,7 @@ Transform:
   m_PrefabParentObject: {fileID: 400060, guid: e194d39a231e29a489a36758f9fb175e, type: 3}
   m_PrefabInternal: {fileID: 657020406}
   m_GameObject: {fileID: 199927513}
-  m_LocalRotation: {x: -.000616519421, y: .022078624, z: -.0160702411, w: .999626875}
+  m_LocalRotation: {x: -.000616519479, y: .0220786259, z: -.016070243, w: .999626935}
   m_LocalPosition: {x: -.254049301, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
@@ -2290,7 +2290,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 421525144}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1024, y: 0, z: -1024}
+  m_LocalPosition: {x: -2048, y: 0, z: -2048}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -5153,11 +5153,11 @@ MonoBehaviour:
   boundarySize: 10
   chanceOfBuilding: 30
   originX: 0
-  originZ: 500
+  originZ: 1000
   using3d: 0
   showNetwork: 0
-  showBuildings: 0
-  showGrid: 0
+  showBuildings: 1
+  showGrid: 1
   showTerrain: 0
   showUpdatedTerrain: 0
   timeOrigin: 1800
@@ -7829,7 +7829,7 @@ MonoBehaviour:
   renderOrder: 50
   isLocalized: 0
   hotZoneScale: {x: 1, y: 1}
-  atlas: {fileID: 11400000, guid: dfcff9db2de043844b16116ef461be54, type: 2}
+  atlas: {fileID: 11400000, guid: 061b63b910d71734eb8a953efb83a358, type: 2}
   backgroundSprite: factory
   hoverSprite: 
   disabledSprite: 
@@ -8121,7 +8121,7 @@ MonoBehaviour:
   renderOrder: 51
   isLocalized: 0
   hotZoneScale: {x: 1, y: 1}
-  atlas: {fileID: 11400000, guid: dfcff9db2de043844b16116ef461be54, type: 2}
+  atlas: {fileID: 11400000, guid: 061b63b910d71734eb8a953efb83a358, type: 2}
   backgroundSprite: clinic
   hoverSprite: 
   disabledSprite: 
@@ -8938,7 +8938,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dc8eaabfa99ce4e8fa92f5a11a5b1752, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cellSize: 16
+  cellSize: 32
   terrain: {fileID: 421525146}
   indicatorSize: 1
   indicatorOffsetY: 5
@@ -9863,7 +9863,7 @@ Transform:
   m_PrefabParentObject: {fileID: 400092, guid: e194d39a231e29a489a36758f9fb175e, type: 3}
   m_PrefabInternal: {fileID: 657020406}
   m_GameObject: {fileID: 2097337843}
-  m_LocalRotation: {x: -.000616519421, y: .022078624, z: -.0160702411, w: .999626875}
+  m_LocalRotation: {x: -.000616519479, y: .0220786259, z: -.016070243, w: .999626935}
   m_LocalPosition: {x: .253428251, y: .00601135287, z: -.0167045239}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:

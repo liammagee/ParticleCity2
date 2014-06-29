@@ -34,23 +34,11 @@ public class ReverseTerrain : MonoBehaviour
 		for (int x = 0; x < width ; x++) {
 			for (int y = 0; y < height ; y++) {
 				// Set 1m above sea level
-				newHeights[x, y] = 0.0f;
+				newHeights[x, y] = 0.1f;
 			}
 		}
 		terrainData.SetHeights(0, 0, newHeights);
-    float[, ,] splatmapData = new float[terrainData.alphamapWidth, terrainData.alphamapHeight, terrainData.alphamapLayers];
-    for (int y = 0; y < terrainData.alphamapHeight; y++)
-    {
-    for (int x = 0; x < terrainData.alphamapWidth; x++)
-     {
-     		float[] splatWeights = new float[terrainData.alphamapLayers];
-				splatmapData[x, y, 0] = 1.0f;
-				splatmapData[x, y, 1] = 0f;
-				splatmapData[x, y, 2] = 0f;
-				splatmapData[x, y, 3] = 0f;
-     }
-   }
-    terrainData.SetAlphamaps(0, 0, splatmapData);
+		Splatmap();
 	}
 
 	[MenuItem("Terrain/Splatmap")]

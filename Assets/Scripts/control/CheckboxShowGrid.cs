@@ -20,7 +20,8 @@ public class CheckboxShowGrid : MonoBehaviour
 		if (visibleGrid == null) {
 			visibleGrid = GameObject.Find("VisibleGrid");
 		}
-		visibleGrid.SetActive(value);
+		if (visibleGrid != null)
+			visibleGrid.SetActive(value);
 	}
 }
 //http://www.everyday3d.com/unity3d/drawing/lines3d.unitypackage
